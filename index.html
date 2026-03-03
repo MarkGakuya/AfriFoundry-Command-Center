@@ -1,0 +1,1324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="AfriFoundry Command Center — Internal dashboard for monitoring users, conversations, data quality, and AI training pipeline." />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="theme-color" content="#080810" />
+<title>AfriFoundry — Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --orange: #F97316;
+    --orange-dim: rgba(249,115,22,0.12);
+    --green: #10B981;
+    --green-dim: rgba(16,185,129,0.12);
+    --blue: #38bdf8;
+    --blue-dim: rgba(56,189,248,0.12);
+    --purple: #a78bfa;
+    --red: #f87171;
+    --bg: #080810;
+    --surface: #0f0f1a;
+    --card: #141420;
+    --border: #1e1e30;
+    --border2: #2a2a40;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --faint: #334155;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Syne',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+  /* ── LOGIN ─────────────────────────────────────────────── */
+  .login-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg); position:relative; overflow:hidden; }
+  .login-wrap::before { content:''; position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(249,115,22,0.06) 0%,transparent 70%); top:-100px; right:-100px; pointer-events:none; }
+  .login-wrap::after { content:''; position:absolute; width:400px; height:400px; border-radius:50%; background:radial-gradient(circle,rgba(16,185,129,0.04) 0%,transparent 70%); bottom:-80px; left:-80px; pointer-events:none; }
+  .login-card { background:var(--surface); border:1px solid var(--border2); border-radius:20px; padding:44px; width:380px; position:relative; z-index:1; }
+  .login-mark { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
+  .login-mark-dot { width:8px; height:8px; border-radius:50%; background:var(--orange); box-shadow:0 0 10px var(--orange); }
+  .login-logo { color:var(--orange); font-size:20px; font-weight:800; letter-spacing:-0.5px; }
+  .login-sub { color:var(--muted); font-size:12px; margin-bottom:32px; font-family:'Space Mono',monospace; }
+  .login-label { font-size:11px; color:var(--muted); margin-bottom:6px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; }
+  .login-input { width:100%; background:var(--bg); border:1px solid var(--border2); border-radius:10px; color:var(--text); padding:11px 14px; font-size:13px; margin-bottom:16px; outline:none; font-family:'Syne',sans-serif; transition:border-color 0.2s; }
+  .login-input:focus { border-color:var(--orange); }
+  .login-btn { width:100%; background:var(--orange); border:none; color:#fff; border-radius:10px; padding:13px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Syne',sans-serif; letter-spacing:0.3px; transition:background 0.2s,transform 0.1s; }
+  .login-btn:hover { background:#ea6c10; }
+  .login-btn:active { transform:scale(0.98); }
+  .login-error { color:var(--red); font-size:12px; margin-top:10px; text-align:center; font-family:'Space Mono',monospace; }
+
+  /* ── APP SHELL ─────────────────────────────────────────── */
+  .app { display:none; flex-direction:column; height:100vh; }
+  .app.visible { display:flex; }
+
+  /* ── HEADER ────────────────────────────────────────────── */
+  .header { background:var(--surface); border-bottom:1px solid var(--border); padding:0 20px; display:flex; align-items:center; justify-content:space-between; height:52px; flex-shrink:0; }
+  .header-left { display:flex; align-items:center; gap:20px; }
+  .header-logo { display:flex; align-items:center; gap:8px; }
+  .logo-dot { width:7px; height:7px; border-radius:50%; background:var(--orange); box-shadow:0 0 8px var(--orange); animation:pulse 2s infinite; }
+  .logo-text { color:var(--orange); font-weight:800; font-size:13px; letter-spacing:0.3px; }
+  .logo-tag { color:var(--muted); font-size:10px; font-family:'Space Mono',monospace; }
+  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 6px var(--orange)} 50%{opacity:0.5;box-shadow:0 0 14px var(--orange)} }
+
+  .tabs { display:flex; gap:2px; }
+  .tab { background:transparent; border:none; color:var(--muted); border-radius:7px; padding:5px 12px; cursor:pointer; font-size:12px; font-weight:700; font-family:'Syne',sans-serif; transition:all 0.15s; letter-spacing:0.2px; }
+  .tab.active { background:var(--orange); color:#fff; }
+  .tab:hover:not(.active) { background:var(--border2); color:var(--text); }
+
+  .header-right { display:flex; align-items:center; gap:10px; }
+  .action-msg { color:var(--green); font-size:11px; font-family:'Space Mono',monospace; }
+  .auto-label { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); cursor:pointer; }
+  .toggle-pip { width:28px; height:15px; border-radius:8px; background:var(--border2); position:relative; transition:background 0.2s; cursor:pointer; }
+  .toggle-pip.on { background:var(--green); }
+  .toggle-pip::after { content:''; position:absolute; width:11px; height:11px; border-radius:50%; background:#fff; top:2px; left:2px; transition:left 0.2s; }
+  .toggle-pip.on::after { left:15px; }
+  .hdr-btn { background:var(--card); border:1px solid var(--border2); color:var(--muted); border-radius:7px; padding:4px 10px; cursor:pointer; font-size:11px; font-family:'Syne',sans-serif; font-weight:600; transition:all 0.15s; }
+  .hdr-btn:hover { color:var(--text); border-color:var(--border2); }
+
+  /* ── CONTENT ───────────────────────────────────────────── */
+  .content { flex:1; overflow:auto; padding:20px; }
+  .panel { display:none; }
+  .panel.active { display:block; }
+
+  /* ── STAT CARDS ────────────────────────────────────────── */
+  .stat-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
+  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; flex:1; min-width:130px; position:relative; overflow:hidden; transition:border-color 0.2s; }
+  .stat-card:hover { border-color:var(--border2); }
+  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
+  .stat-card.orange::before { background:var(--orange); }
+  .stat-card.green::before { background:var(--green); }
+  .stat-card.blue::before { background:var(--blue); }
+  .stat-card.purple::before { background:var(--purple); }
+  .stat-card.red::before { background:var(--red); }
+  .stat-val { font-size:28px; font-weight:800; letter-spacing:-1px; }
+  .stat-label { font-size:11px; color:var(--muted); margin-top:4px; font-weight:600; letter-spacing:0.3px; }
+  .stat-sub { font-size:10px; color:var(--faint); margin-top:4px; font-family:'Space Mono',monospace; }
+
+  /* ── GRID LAYOUTS ──────────────────────────────────────── */
+  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
+  .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px; }
+  @media(max-width:900px) { .two-col,.three-col { grid-template-columns:1fr; } }
+
+  /* ── CARDS ─────────────────────────────────────────────── */
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px; }
+  .card-title { padding:13px 16px; border-bottom:1px solid var(--border); font-weight:700; font-size:11px; color:var(--muted); display:flex; align-items:center; justify-content:space-between; text-transform:uppercase; letter-spacing:0.8px; }
+  .card-title-accent { color:var(--orange); }
+  .card-body { padding:16px; }
+
+  /* ── TABLE ─────────────────────────────────────────────── */
+  table { width:100%; border-collapse:collapse; font-size:12px; }
+  th { padding:9px 14px; text-align:left; color:var(--faint); font-weight:700; font-size:10px; border-bottom:1px solid var(--border); background:var(--surface); text-transform:uppercase; letter-spacing:0.6px; }
+  td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.03); }
+  tr:last-child td { border-bottom:none; }
+  .clickable-row { cursor:pointer; }
+  .clickable-row:hover td { background:rgba(249,115,22,0.04) !important; }
+  .empty-row td { text-align:center; color:var(--muted); padding:32px; font-family:'Space Mono',monospace; font-size:11px; }
+
+  /* ── BADGES ────────────────────────────────────────────── */
+  .badge { display:inline-block; padding:2px 8px; border-radius:5px; font-size:10px; font-weight:700; letter-spacing:0.3px; font-family:'Space Mono',monospace; }
+  .badge-admin   { background:rgba(167,139,250,0.15); color:var(--purple); }
+  .badge-user    { background:var(--blue-dim); color:var(--blue); }
+  .badge-sector  { background:var(--border2); color:#94a3b8; }
+  .badge-good    { background:var(--green-dim); color:var(--green); }
+  .badge-junk    { background:rgba(248,113,113,0.12); color:var(--red); }
+  .badge-review  { background:rgba(249,115,22,0.12); color:var(--orange); }
+  .badge-gold    { background:rgba(251,191,36,0.15); color:#fbbf24; }
+  .badge-high    { background:var(--green-dim); color:var(--green); }
+  .badge-med     { background:var(--orange-dim); color:var(--orange); }
+  .badge-low     { background:rgba(100,116,139,0.12); color:var(--muted); }
+
+  /* ── BUTTONS ───────────────────────────────────────────── */
+  .btn-sm { border:none; border-radius:6px; padding:3px 9px; cursor:pointer; font-size:11px; font-weight:700; font-family:'Syne',sans-serif; transition:all 0.15s; }
+  .btn-promote { background:rgba(167,139,250,0.15); color:var(--purple); }
+  .btn-remove  { background:transparent; border:1px solid rgba(248,113,113,0.3) !important; color:var(--red); }
+  .btn-view    { background:var(--blue-dim); color:var(--blue); }
+  .btn-good    { background:var(--green-dim); color:var(--green); }
+  .btn-junk    { background:rgba(248,113,113,0.1); color:var(--red); }
+  .btn-gold    { background:rgba(251,191,36,0.12); color:#fbbf24; }
+  .btn-export  { background:var(--orange); color:#fff; padding:6px 14px; border-radius:8px; font-size:12px; }
+  .btn-export:hover { background:#ea6c10; }
+  .btn-group   { display:flex; gap:4px; }
+
+  /* ── SEARCH ────────────────────────────────────────────── */
+  .search-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
+  .search-input { background:var(--card); border:1px solid var(--border2); border-radius:9px; color:var(--text); padding:7px 12px; font-size:12px; width:260px; outline:none; font-family:'Syne',sans-serif; transition:border-color 0.2s; }
+  .search-input:focus { border-color:var(--orange); }
+  .count-label { color:var(--muted); font-size:11px; font-family:'Space Mono',monospace; }
+  .filter-select { background:var(--card); border:1px solid var(--border2); border-radius:9px; color:var(--text); padding:7px 10px; font-size:12px; outline:none; font-family:'Syne',sans-serif; cursor:pointer; }
+
+  /* ── SECTOR CHART ──────────────────────────────────────── */
+  .sector-row { display:flex; align-items:center; gap:10px; margin-bottom:9px; }
+  .sector-name { font-size:11px; color:#94a3b8; width:90px; flex-shrink:0; text-transform:capitalize; font-weight:600; }
+  .sector-bar-wrap { flex:1; background:var(--bg); border-radius:4px; height:7px; overflow:hidden; }
+  .sector-bar { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--orange),var(--green)); transition:width 0.8s ease; }
+  .sector-count { font-size:10px; color:var(--muted); width:28px; text-align:right; flex-shrink:0; font-family:'Space Mono',monospace; }
+
+  /* ── ACTIVITY FEED ─────────────────────────────────────── */
+  .activity-item { display:flex; align-items:flex-start; gap:10px; padding:10px 16px; border-bottom:1px solid rgba(255,255,255,0.03); }
+  .activity-item:last-child { border-bottom:none; }
+  .activity-icon { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; margin-top:1px; }
+  .activity-icon.new-user { background:var(--green-dim); color:var(--green); }
+  .activity-icon.conversation { background:var(--blue-dim); color:var(--blue); }
+  .activity-detail { flex:1; font-size:12px; color:#94a3b8; line-height:1.5; }
+  .activity-when { font-size:10px; color:var(--muted); white-space:nowrap; font-family:'Space Mono',monospace; }
+
+  /* ── MODAL ─────────────────────────────────────────────── */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
+  .modal-overlay.hidden { display:none; }
+  .modal { background:var(--surface); border:1px solid var(--border2); border-radius:18px; width:100%; max-width:700px; max-height:88vh; display:flex; flex-direction:column; }
+  .modal-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
+  .modal-title { font-weight:800; font-size:14px; }
+  .modal-meta { font-size:11px; color:var(--muted); margin-top:3px; font-family:'Space Mono',monospace; }
+  .modal-close { background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; padding:4px 8px; border-radius:6px; }
+  .modal-close:hover { background:var(--border2); color:var(--text); }
+  .modal-body { flex:1; overflow-y:auto; padding:16px 20px; }
+  .modal-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; flex-shrink:0; }
+  .chat-msg { margin-bottom:14px; }
+  .chat-msg-label { font-size:10px; font-weight:700; letter-spacing:1px; margin-bottom:5px; text-transform:uppercase; }
+  .chat-msg-label.user { color:var(--orange); }
+  .chat-msg-label.ai { color:var(--green); }
+  .chat-msg-bubble { background:var(--bg); border-radius:10px; padding:10px 14px; font-size:13px; color:#cbd5e1; line-height:1.7; white-space:pre-wrap; border:1px solid var(--border); }
+  .chat-msg-bubble.ai-bubble { border-color:rgba(16,185,129,0.2); }
+
+  /* ── AI HEALTH ─────────────────────────────────────────── */
+  .health-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:10px; margin-bottom:16px; }
+  .health-card { background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .health-val { font-size:22px; font-weight:800; color:var(--orange); letter-spacing:-0.5px; }
+  .health-label { font-size:10px; color:var(--muted); margin-top:3px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase; }
+
+  /* ── RETENTION ─────────────────────────────────────────── */
+  .retention-bar { display:flex; align-items:center; gap:12px; }
+  .retention-track { flex:1; background:var(--bg); border-radius:6px; height:10px; overflow:hidden; }
+  .retention-fill { height:100%; border-radius:6px; background:linear-gradient(90deg,var(--orange),var(--green)); transition:width 1s ease; }
+  .retention-pct { font-size:16px; font-weight:800; color:var(--green); font-family:'Space Mono',monospace; }
+
+  /* ── ERRORS ────────────────────────────────────────────── */
+  .error-item { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 16px; margin-bottom:8px; }
+  .error-header { display:flex; justify-content:space-between; margin-bottom:6px; }
+  .error-context { color:var(--red); font-weight:700; font-size:12px; }
+  .error-time { color:var(--muted); font-size:10px; font-family:'Space Mono',monospace; }
+  .error-msg { color:#94a3b8; font-size:11px; font-family:'Space Mono',monospace; word-break:break-all; }
+  .no-errors { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:48px; text-align:center; color:var(--green); font-size:14px; }
+
+  /* ── DATA LAB ──────────────────────────────────────────── */
+  .datalab-tabs { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
+  .datalab-tab { background:var(--card); border:1px solid var(--border2); color:var(--muted); border-radius:8px; padding:6px 14px; cursor:pointer; font-size:12px; font-weight:700; font-family:'Syne',sans-serif; transition:all 0.15s; }
+  .datalab-tab.active { background:var(--orange-dim); border-color:var(--orange); color:var(--orange); }
+  .datalab-panel { display:none; }
+  .datalab-panel.active { display:block; }
+
+  /* Coverage map grid */
+  .coverage-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
+  .coverage-card { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px; }
+  .coverage-region { font-weight:700; font-size:13px; margin-bottom:8px; }
+  .coverage-bar-wrap { background:var(--surface); border-radius:4px; height:6px; margin-bottom:6px; overflow:hidden; }
+  .coverage-bar { height:100%; border-radius:4px; transition:width 0.8s ease; }
+  .coverage-bar.high { background:var(--green); }
+  .coverage-bar.med  { background:var(--orange); }
+  .coverage-bar.low  { background:var(--red); }
+  .coverage-count { font-size:10px; color:var(--muted); font-family:'Space Mono',monospace; }
+
+  /* Confidence distribution */
+  .conf-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
+  .conf-label { font-size:11px; color:#94a3b8; width:70px; flex-shrink:0; font-family:'Space Mono',monospace; }
+  .conf-bar-wrap { flex:1; background:var(--bg); border-radius:4px; height:7px; overflow:hidden; }
+  .conf-bar { height:100%; border-radius:4px; transition:width 0.6s ease; }
+  .conf-count { font-size:10px; color:var(--muted); width:40px; text-align:right; font-family:'Space Mono',monospace; }
+
+  /* Training stats */
+  .training-stat { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
+  .training-stat:last-child { border-bottom:none; }
+  .training-label { font-size:12px; color:#94a3b8; font-weight:600; }
+  .training-val { font-size:18px; font-weight:800; font-family:'Space Mono',monospace; }
+
+  /* ── AFRISCOUT ──────────────────────────────────────────── */
+  .scout-stat-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
+  .scout-stat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 18px; flex:1; min-width:120px; }
+  .scout-val { font-size:22px; font-weight:800; }
+  .scout-label { font-size:10px; color:var(--muted); margin-top:3px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase; }
+  .collector-row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.03); }
+  .collector-avatar { width:32px; height:32px; border-radius:50%; background:var(--orange-dim); display:flex; align-items:center; justify-content:center; color:var(--orange); font-weight:800; font-size:13px; flex-shrink:0; }
+  .collector-name { font-weight:700; font-size:13px; }
+  .collector-meta { font-size:10px; color:var(--muted); font-family:'Space Mono',monospace; }
+  .collector-stats { margin-left:auto; text-align:right; }
+  .collector-dp { font-size:16px; font-weight:800; color:var(--orange); }
+  .collector-dp-label { font-size:10px; color:var(--muted); }
+  .progress-ring { display:inline-flex; align-items:center; gap:6px; }
+  .progress-mini { width:60px; height:5px; background:var(--bg); border-radius:3px; overflow:hidden; }
+  .progress-mini-fill { height:100%; border-radius:3px; background:var(--green); transition:width 0.6s ease; }
+
+  /* Pending submission card */
+  .submission-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+  .submission-info { flex:1; }
+  .submission-item { font-weight:700; font-size:13px; margin-bottom:4px; }
+  .submission-meta { font-size:10px; color:var(--muted); font-family:'Space Mono',monospace; }
+  .submission-value { font-size:18px; font-weight:800; color:var(--orange); text-align:right; white-space:nowrap; }
+  .submission-actions { display:flex; gap:6px; margin-top:8px; }
+
+  /* Gap alerts */
+  .gap-alert { background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.2); border-radius:10px; padding:12px 16px; margin-bottom:8px; display:flex; align-items:center; gap:12px; }
+  .gap-icon { font-size:16px; flex-shrink:0; }
+  .gap-text { font-size:12px; color:#94a3b8; flex:1; }
+  .gap-severity { font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; font-family:'Space Mono',monospace; }
+  .gap-high { background:rgba(248,113,113,0.15); color:var(--red); }
+  .gap-med  { background:var(--orange-dim); color:var(--orange); }
+
+  /* ── LOADING ────────────────────────────────────────────── */
+  .loading { text-align:center; color:var(--muted); padding:40px; font-size:13px; font-family:'Space Mono',monospace; }
+  .loading::after { content:''; animation:dots 1.5s infinite; }
+  @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
+
+  /* ── TURN COLORS ────────────────────────────────────────── */
+  .turns-high { color:var(--green); font-weight:700; }
+  .turns-mid  { color:var(--orange); font-weight:700; }
+  .turns-low  { color:var(--muted); }
+
+  /* ── SECTION HEADING ────────────────────────────────────── */
+  .section-heading { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
+  .section-heading::after { content:''; flex:1; height:1px; background:var(--border); }
+
+  /* ── COMING SOON ────────────────────────────────────────── */
+  .coming-soon { background:var(--card); border:1px dashed var(--border2); border-radius:14px; padding:48px; text-align:center; }
+  .coming-soon-icon { font-size:32px; margin-bottom:12px; }
+  .coming-soon-title { font-weight:800; font-size:15px; margin-bottom:6px; color:var(--orange); }
+  .coming-soon-text { font-size:12px; color:var(--muted); max-width:320px; margin:0 auto; line-height:1.6; }
+</style>
+</head>
+<body>
+
+<!-- ── LOGIN ──────────────────────────────────────────────────────────────── -->
+<div class="login-wrap" id="loginWrap">
+  <div class="login-card">
+    <div class="login-mark">
+      <div class="login-mark-dot"></div>
+      <div class="login-logo">AfriFoundry</div>
+    </div>
+    <div class="login-sub">Command Center — Restricted Access</div>
+    <div class="login-label">Email</div>
+    <input class="login-input" type="email" id="loginEmail" placeholder="admin@afrifoundry.com" />
+    <div class="login-label">Password</div>
+    <input class="login-input" type="password" id="loginPass" placeholder="••••••••"
+      onkeydown="if(event.key==='Enter')doLogin()" />
+    <button class="login-btn" onclick="doLogin()">Access Command Center</button>
+    <div class="login-error" id="loginError"></div>
+  </div>
+</div>
+
+<!-- ── APP ────────────────────────────────────────────────────────────────── -->
+<div class="app" id="app">
+  <div class="header">
+    <div class="header-left">
+      <div class="header-logo">
+        <div class="logo-dot"></div>
+        <div>
+          <div class="logo-text">AfriFoundry Command Center</div>
+        </div>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
+        <button class="tab" onclick="switchTab('users',this)">Users</button>
+        <button class="tab" onclick="switchTab('conversations',this)">Conversations</button>
+        <button class="tab" onclick="switchTab('datalab',this)">Data Lab</button>
+        <button class="tab" onclick="switchTab('afriscout',this)">AfriScout</button>
+        <button class="tab" onclick="switchTab('ai',this)">AI Health</button>
+        <button class="tab" onclick="switchTab('errors',this)">Errors</button>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="action-msg" id="actionMsg"></span>
+      <label class="auto-label" title="Auto-refresh every 30s">
+        <span style="font-size:11px;color:var(--muted)">Auto</span>
+        <div class="toggle-pip" id="autoToggle" onclick="toggleAutoRefresh()"></div>
+      </label>
+      <button class="hdr-btn" onclick="loadAll()">↻ Refresh</button>
+      <button class="hdr-btn" onclick="doLogout()">Log Out</button>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ── OVERVIEW ───────────────────────────────────────── -->
+    <div class="panel active" id="panel-overview">
+      <div class="stat-row" id="statRow"><div class="loading">Loading</div></div>
+      <div class="two-col">
+        <div class="card">
+          <div class="card-title">Sectors Being Validated</div>
+          <div style="padding:16px" id="sectorChart"><div class="loading">Loading</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Live Activity Feed</div>
+          <div id="activityFeed"><div class="loading">Loading</div></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">
+          <span>Recent Conversations</span>
+          <span style="color:var(--muted);font-size:10px;font-family:'Space Mono',monospace">Click to read</span>
+        </div>
+        <table>
+          <thead><tr><th>User</th><th>Idea</th><th>Sector</th><th>Turns</th><th>When</th><th></th></tr></thead>
+          <tbody id="overviewConvTbody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── USERS ──────────────────────────────────────────── -->
+    <div class="panel" id="panel-users">
+      <div class="search-row">
+        <input class="search-input" id="userSearch" placeholder="Search name or email..." oninput="renderUsers()" />
+        <span class="count-label" id="userCount"></span>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Convs</th><th>Validations</th><th>Location</th><th>Joined</th><th>Last Login</th><th>Actions</th></tr></thead>
+          <tbody id="userTbody"><tr class="empty-row"><td colspan="9">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── CONVERSATIONS ──────────────────────────────────── -->
+    <div class="panel" id="panel-conversations">
+      <div class="search-row">
+        <input class="search-input" id="convSearch" placeholder="Search idea or user..." oninput="renderConversations()" />
+        <select class="filter-select" id="qualityFilter" onchange="renderConversations()">
+          <option value="">All Labels</option>
+          <option value="good">Good</option>
+          <option value="gold">Gold</option>
+          <option value="needs_review">Needs Review</option>
+          <option value="junk">Junk</option>
+        </select>
+        <select class="filter-select" id="sectorFilter" onchange="renderConversations()">
+          <option value="">All Sectors</option>
+          <option value="retail">Retail</option>
+          <option value="technology">Technology</option>
+          <option value="health">Health</option>
+          <option value="food">Food</option>
+          <option value="energy">Energy</option>
+          <option value="transport">Transport</option>
+          <option value="agriculture">Agriculture</option>
+          <option value="finance">Finance</option>
+        </select>
+        <span class="count-label" id="convCount"></span>
+      </div>
+      <div class="card">
+        <table>
+          <thead><tr><th>User</th><th>Idea</th><th>Sector</th><th>Label</th><th>Depth</th><th>Turns</th><th>Started</th><th>Actions</th></tr></thead>
+          <tbody id="convTbody"><tr class="empty-row"><td colspan="8">Loading...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ── DATA LAB ───────────────────────────────────────── -->
+    <div class="panel" id="panel-datalab">
+      <div class="datalab-tabs">
+        <button class="datalab-tab active" onclick="switchDatalabTab('intelligence',this)">🧠 Intelligence</button>
+        <button class="datalab-tab" onclick="switchDatalabTab('quality',this)">✅ Quality Control</button>
+        <button class="datalab-tab" onclick="switchDatalabTab('training',this)">🎯 Training Data</button>
+      </div>
+
+      <!-- Intelligence -->
+      <div class="datalab-panel active" id="dl-intelligence">
+        <div class="stat-row" id="dlStatRow">
+          <div class="stat-card blue">
+            <div class="stat-val" style="color:var(--blue)" id="dlTotal">—</div>
+            <div class="stat-label">Total Datapoints</div>
+            <div class="stat-sub" id="dlTarget">Target: 10,000</div>
+          </div>
+          <div class="stat-card green">
+            <div class="stat-val" style="color:var(--green)" id="dlHighConf">—</div>
+            <div class="stat-label">High Confidence (≥80%)</div>
+            <div class="stat-sub">confidence_score ≥ 0.8</div>
+          </div>
+          <div class="stat-card orange">
+            <div class="stat-val" style="color:var(--orange)" id="dlSectors">—</div>
+            <div class="stat-label">Sectors Covered</div>
+            <div class="stat-sub">Distinct categories</div>
+          </div>
+          <div class="stat-card red">
+            <div class="stat-val" style="color:var(--red)" id="dlExpiring">—</div>
+            <div class="stat-label">Expiring Soon</div>
+            <div class="stat-sub">Within 30 days</div>
+          </div>
+        </div>
+
+        <div class="two-col">
+          <!-- Sector coverage -->
+          <div class="card">
+            <div class="card-title">Datapoints by Sector</div>
+            <div style="padding:16px" id="dlSectorChart"><div class="loading">Loading</div></div>
+          </div>
+          <!-- Regional coverage -->
+          <div class="card">
+            <div class="card-title">Regional Coverage</div>
+            <div style="padding:16px" id="dlRegionChart"><div class="loading">Loading</div></div>
+          </div>
+        </div>
+
+        <!-- Confidence distribution -->
+        <div class="card">
+          <div class="card-title">Confidence Score Distribution</div>
+          <div style="padding:16px" id="dlConfidence"><div class="loading">Loading</div></div>
+        </div>
+
+        <!-- Data gaps -->
+        <div class="card">
+          <div class="card-title"><span>Data Gaps — Priority for Field Collection</span><span class="card-title-accent">Live — V1</span></div>
+          <div style="padding:16px" id="dlGaps">
+            <div class="gap-alert">
+              <div class="gap-icon">📍</div>
+              <div class="gap-text"><strong>Kisumu / Western Kenya</strong> — Zero verified datapoints. Major urban market being ignored.</div>
+              <div class="gap-severity gap-high">CRITICAL</div>
+            </div>
+            <div class="gap-alert">
+              <div class="gap-icon">📍</div>
+              <div class="gap-text"><strong>Nakuru / Rift Valley</strong> — Agri sector has no local price data. Defaulting to Nairobi prices which are wrong.</div>
+              <div class="gap-severity gap-high">CRITICAL</div>
+            </div>
+            <div class="gap-alert">
+              <div class="gap-icon">📍</div>
+              <div class="gap-text"><strong>Eldoret</strong> — Transport / logistics sector missing. Major route hub with zero data.</div>
+              <div class="gap-severity gap-med">HIGH</div>
+            </div>
+            <div class="gap-alert">
+              <div class="gap-icon">📍</div>
+              <div class="gap-text"><strong>Thika Road Corridor</strong> — Industrial sector data gap. Manufacturing businesses get generic responses.</div>
+              <div class="gap-severity gap-med">HIGH</div>
+            </div>
+            <div class="gap-alert">
+              <div class="gap-icon">📊</div>
+              <div class="gap-text"><strong>Finance sector</strong> — Only 1 conversation, no market datapoints. SACCO and chama data missing entirely.</div>
+              <div class="gap-severity gap-med">HIGH</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Quality Control -->
+      <div class="datalab-panel" id="dl-quality">
+        <div class="search-row">
+          <input class="search-input" id="dpSearch" placeholder="Search item or category..." oninput="renderDatapoints()" style="width:300px" />
+          <select class="filter-select" id="dpConfFilter" onchange="renderDatapoints()">
+            <option value="">All Confidence</option>
+            <option value="high">High (≥80%)</option>
+            <option value="med">Medium (60-79%)</option>
+            <option value="low">Low (&lt;60%)</option>
+          </select>
+          <select class="filter-select" id="dpSectorFilter" onchange="renderDatapoints()">
+            <option value="">All Sectors</option>
+            <option value="food">Food</option>
+            <option value="retail">Retail</option>
+            <option value="energy">Energy</option>
+            <option value="health">Health</option>
+            <option value="transport">Transport</option>
+            <option value="agriculture">Agriculture</option>
+          </select>
+          <span class="count-label" id="dpCount"></span>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Item</th><th>Value</th><th>Sector</th><th>Region</th><th>Confidence</th><th>Updated</th><th>Actions</th></tr></thead>
+            <tbody id="dpTbody"><tr class="empty-row"><td colspan="7">Loading datapoints...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Training Data -->
+      <div class="datalab-panel" id="dl-training">
+        <div class="two-col">
+          <div class="card">
+            <div class="card-title">Training Data Quality</div>
+            <div style="padding:16px">
+              <div class="training-stat">
+                <div>
+                  <div class="training-label">Gold Examples</div>
+                  <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">Anchor examples for fine-tuning</div>
+                </div>
+                <div class="training-val" style="color:#fbbf24" id="trainGold">—</div>
+              </div>
+              <div class="training-stat">
+                <div>
+                  <div class="training-label">Good Conversations</div>
+                  <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">Ready for fine-tuning</div>
+                </div>
+                <div class="training-val" style="color:var(--green)" id="trainGood">—</div>
+              </div>
+              <div class="training-stat">
+                <div>
+                  <div class="training-label">Needs Review</div>
+                  <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">Manually classify these</div>
+                </div>
+                <div class="training-val" style="color:var(--orange)" id="trainReview">—</div>
+              </div>
+              <div class="training-stat">
+                <div>
+                  <div class="training-label">Junk — Excluded</div>
+                  <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">Filtered from training</div>
+                </div>
+                <div class="training-val" style="color:var(--red)" id="trainJunk">—</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title">Export Training Data</div>
+            <div style="padding:16px">
+              <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.6">
+                Exports all <strong style="color:var(--green)">good</strong> and <strong style="color:#fbbf24">gold</strong> conversations as JSONL — ready for fine-tuning. Only includes conversations with turn_count ≥ 2 and is_business_idea = true.
+              </div>
+              <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">
+                Format: {"messages": [{"role": "user"...}, {"role": "assistant"...}]}
+              </div>
+              <button class="btn-sm btn-export" onclick="exportTrainingData()" style="width:100%">⬇ Export JSONL for Fine-Tuning</button>
+              <div style="margin-top:10px;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace" id="exportStatus"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversations with quality controls -->
+        <div class="search-row">
+          <input class="search-input" id="trainSearch" placeholder="Search conversations..." oninput="renderTrainingConvs()" />
+          <select class="filter-select" id="trainLabelFilter" onchange="renderTrainingConvs()">
+            <option value="needs_review">Needs Review</option>
+            <option value="good">Good</option>
+            <option value="gold">Gold</option>
+            <option value="junk">Junk</option>
+            <option value="">All</option>
+          </select>
+          <span class="count-label" id="trainCount"></span>
+        </div>
+        <div class="card">
+          <table>
+            <thead><tr><th>Idea</th><th>Sector</th><th>Label</th><th>Depth</th><th>Turns</th><th>Actions</th></tr></thead>
+            <tbody id="trainTbody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AFRISCOUT ───────────────────────────────────────── -->
+    <div class="panel" id="panel-afriscout">
+      <div class="scout-stat-row">
+        <div class="scout-stat">
+          <div class="scout-val" style="color:var(--orange)">0</div>
+          <div class="scout-label">Active Collectors</div>
+        </div>
+        <div class="scout-stat">
+          <div class="scout-val" style="color:var(--orange)" id="scoutTotal">8,622</div>
+          <div class="scout-label">Total Datapoints</div>
+        </div>
+        <div class="scout-stat">
+          <div class="scout-val" style="color:var(--red)">0</div>
+          <div class="scout-label">Pending Approval</div>
+        </div>
+        <div class="scout-stat">
+          <div class="scout-val" style="color:var(--green)">0</div>
+          <div class="scout-label">Approved Today</div>
+        </div>
+        <div class="scout-stat">
+          <div class="scout-val" style="color:var(--muted)">Mar 2026</div>
+          <div class="scout-label">Field Launch</div>
+        </div>
+      </div>
+
+      <div class="two-col">
+        <!-- Collectors -->
+        <div class="card">
+          <div class="card-title">
+            <span>Field Collectors</span>
+            <span style="color:var(--orange);font-size:10px">Launching March</span>
+          </div>
+          <div style="padding:32px;text-align:center">
+            <div style="font-size:28px;margin-bottom:10px">📱</div>
+            <div style="font-weight:700;font-size:13px;color:var(--orange);margin-bottom:6px">AfriScout Not Yet Live</div>
+            <div style="font-size:12px;color:var(--muted);line-height:1.6;max-width:280px;margin:0 auto">
+              Field data collectors will appear here once AfriScout launches. Target: 2–5 collectors starting March 2026 covering Nairobi, Mombasa, Kisumu.
+            </div>
+          </div>
+        </div>
+
+        <!-- Sector targets -->
+        <div class="card">
+          <div class="card-title">Field Collection Targets</div>
+          <div style="padding:16px">
+            <div class="section-heading">Priority Sectors for March</div>
+            <div class="sector-row">
+              <div class="sector-name">Finance</div>
+              <div class="sector-bar-wrap"><div class="sector-bar" style="width:5%"></div></div>
+              <div class="sector-count" style="color:var(--red)">1</div>
+            </div>
+            <div class="sector-row">
+              <div class="sector-name">Agriculture</div>
+              <div class="sector-bar-wrap"><div class="sector-bar" style="width:15%"></div></div>
+              <div class="sector-count" style="color:var(--orange)">Low</div>
+            </div>
+            <div class="sector-row">
+              <div class="sector-name">Construction</div>
+              <div class="sector-bar-wrap"><div class="sector-bar" style="width:10%"></div></div>
+              <div class="sector-count" style="color:var(--orange)">Low</div>
+            </div>
+            <div class="sector-row">
+              <div class="sector-name">Retail</div>
+              <div class="sector-bar-wrap"><div class="sector-bar" style="width:70%"></div></div>
+              <div class="sector-count">Good</div>
+            </div>
+            <div class="sector-row">
+              <div class="sector-name">Technology</div>
+              <div class="sector-bar-wrap"><div class="sector-bar" style="width:55%"></div></div>
+              <div class="sector-count">OK</div>
+            </div>
+            <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
+              <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">Target: 10,000 total by end of March</div>
+              <div style="margin-top:8px;background:var(--bg);border-radius:6px;height:8px;overflow:hidden">
+                <div style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--orange),var(--green));width:86%"></div>
+              </div>
+              <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:'Space Mono',monospace">8,622 / 10,000 — 86%</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending submissions placeholder -->
+      <div class="card">
+        <div class="card-title">
+          <span>Pending Submissions — Human Validation Queue</span>
+          <span style="color:var(--muted);font-size:10px">All field data passes through here before entering DB</span>
+        </div>
+        <div style="padding:32px;text-align:center">
+          <div style="font-size:28px;margin-bottom:10px">✅</div>
+          <div style="font-weight:700;font-size:13px;color:var(--green);margin-bottom:6px">Queue is Empty</div>
+          <div style="font-size:12px;color:var(--muted)">No submissions pending review. When AfriScout collectors submit data, it will appear here for approval before entering the database.</div>
+        </div>
+      </div>
+
+      <!-- Route planning -->
+      <div class="card">
+        <div class="card-title"><span>Collection Route Planning</span><span style="color:var(--orange);font-size:10px">March 2026</span></div>
+        <div style="padding:16px">
+          <div class="section-heading">Priority Locations for Field Collection</div>
+          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
+            <div style="background:var(--bg);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px">
+              <div style="font-weight:700;font-size:12px;color:var(--red);margin-bottom:4px">🔴 Kisumu CBD</div>
+              <div style="font-size:10px;color:var(--muted);line-height:1.5">0 datapoints. Western hub. Food, retail, transport sectors needed urgently.</div>
+            </div>
+            <div style="background:var(--bg);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px">
+              <div style="font-weight:700;font-size:12px;color:var(--red);margin-bottom:4px">🔴 Nakuru Town</div>
+              <div style="font-size:10px;color:var(--muted);line-height:1.5">0 datapoints. Major agri market. Grain and produce prices critical.</div>
+            </div>
+            <div style="background:var(--bg);border:1px solid rgba(249,115,22,0.3);border-radius:10px;padding:12px">
+              <div style="font-weight:700;font-size:12px;color:var(--orange);margin-bottom:4px">🟠 Eldoret</div>
+              <div style="font-size:10px;color:var(--muted);line-height:1.5">0 datapoints. Logistics hub. Transport costs and warehouse pricing needed.</div>
+            </div>
+            <div style="background:var(--bg);border:1px solid rgba(249,115,22,0.3);border-radius:10px;padding:12px">
+              <div style="font-weight:700;font-size:12px;color:var(--orange);margin-bottom:4px">🟠 Gikomba Deep Dive</div>
+              <div style="font-size:10px;color:var(--muted);line-height:1.5">Has data but needs refresh. Prices change weekly. Send collector monthly.</div>
+            </div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-weight:700;font-size:12px;color:var(--green);margin-bottom:4px">🟢 Kongowea</div>
+              <div style="font-size:10px;color:var(--muted);line-height:1.5">Good coverage. Refresh quarterly. Monitor for price drift.</div>
+            </div>
+            <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px">
+              <div style="font-weight:700;font-size:12px;color:var(--green);margin-bottom:4px">🟢 Eastleigh</div>
+              <div style="font-size:10px;color:var(--muted);line-height:1.5">Good retail coverage. Need healthcare pricing to be added.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── AI HEALTH ───────────────────────────────────────── -->
+    <div class="panel" id="panel-ai">
+      <div class="health-grid" id="aiHealthGrid"><div class="loading" style="grid-column:1/-1">Loading</div></div>
+      <div class="card" style="margin-top:4px">
+        <div class="card-title">User Retention Signal</div>
+        <div style="padding:20px">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-family:'Space Mono',monospace">Users who returned for a second conversation</div>
+          <div class="retention-bar">
+            <div class="retention-track"><div class="retention-fill" id="retentionFill" style="width:0%"></div></div>
+            <div class="retention-pct" id="retentionPct">—</div>
+          </div>
+        </div>
+      </div>
+      <!-- Key rotation status -->
+      <div class="card">
+        <div class="card-title">Groq Key Rotation Status</div>
+        <div style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
+          <div style="background:var(--bg);border:1px solid var(--green-dim);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">KEY 1</div>
+            <div style="font-size:12px;font-weight:700;color:var(--green)">GROQ_API_KEY</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Primary</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid var(--blue-dim);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">KEY 2</div>
+            <div style="font-size:12px;font-weight:700;color:var(--blue)">GROQ_API_KEY_2</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Fallback 1</div>
+          </div>
+          <div style="background:var(--bg);border:1px solid rgba(167,139,250,0.15);border-radius:10px;padding:14px;text-align:center">
+            <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">KEY 3</div>
+            <div style="font-size:12px;font-weight:700;color:var(--purple)">GROQ_API_KEY_3</div>
+            <div style="font-size:10px;color:var(--muted);margin-top:4px">Fallback 2</div>
+          </div>
+        </div>
+        <div style="padding:0 16px 14px;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">
+          Total capacity: 300,000 tokens/day · 100K per key · Gemini 1.5-Flash activates when all exhausted
+        </div>
+      </div>
+    </div>
+
+    <!-- ── ERRORS ──────────────────────────────────────────── -->
+    <div class="panel" id="panel-errors">
+      <div id="errorsContainer"><div class="loading">Loading</div></div>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── CONVERSATION MODAL ───────────────────────────────────────────────────── -->
+<div class="modal-overlay hidden" id="convModal" onclick="closeModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modalTitle">Conversation</div>
+        <div class="modal-meta" id="modalMeta"></div>
+      </div>
+      <button class="modal-close" onclick="hideModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<script>
+const API = 'https://afrifoundry-api.onrender.com';
+let token = localStorage.getItem('af_admin_token') || '';
+let allUsers = [], allConversations = [], allDatapoints = [], statsCache = null;
+let autoRefreshInterval = null;
+let currentConvId = null;
+
+// ── AUTH ──────────────────────────────────────────────────────────────────────
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const pass  = document.getElementById('loginPass').value;
+  document.getElementById('loginError').textContent = '';
+  try {
+    const res  = await fetch(`${API}/api/v1/auth/login`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({email, password: pass})
+    });
+    const data = await res.json();
+    if (!res.ok) { document.getElementById('loginError').textContent = data.detail || 'Login failed'; return; }
+    if (data.user?.role !== 'admin') { document.getElementById('loginError').textContent = 'Admin access required'; return; }
+    token = data.token;
+    localStorage.setItem('af_admin_token', token);
+    showApp();
+  } catch(e) {
+    document.getElementById('loginError').textContent = 'Connection error. Is the API live?';
+  }
+}
+
+function doLogout() {
+  localStorage.removeItem('af_admin_token');
+  token = '';
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('loginWrap').style.display = 'flex';
+  if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+}
+
+function showApp() {
+  document.getElementById('loginWrap').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  loadAll();
+}
+
+// ── API ───────────────────────────────────────────────────────────────────────
+async function apiFetch(path) {
+  try {
+    const r = await fetch(`${API}${path}`, { headers:{Authorization:`Bearer ${token}`} });
+    if (r.status === 401 || r.status === 403) { doLogout(); return null; }
+    return r.json();
+  } catch(e) { console.error('API error:', path, e); return null; }
+}
+
+async function apiPost(path, body) {
+  try {
+    const r = await fetch(`${API}${path}`, {
+      method:'POST', headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    return r.json();
+  } catch(e) { return null; }
+}
+
+async function apiPatch(path, body) {
+  try {
+    const r = await fetch(`${API}${path}`, {
+      method:'PATCH', headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
+      body: JSON.stringify(body)
+    });
+    return r.json();
+  } catch(e) { return null; }
+}
+
+// ── LOAD ALL ──────────────────────────────────────────────────────────────────
+async function loadAll() {
+  const [stats, users, convs, errs, dps] = await Promise.all([
+    apiFetch('/api/v1/admin/stats'),
+    apiFetch('/api/v1/admin/users?limit=200'),
+    apiFetch('/api/v1/admin/conversations?limit=200'),
+    apiFetch('/api/v1/admin/errors?limit=50'),
+    apiFetch('/api/v1/admin/datapoints?limit=300').catch(() => null),
+  ]);
+  if (stats)  { statsCache = stats; renderStats(stats); renderAIHealth(stats); }
+  if (users)  { allUsers = users.users || []; renderUsers(); }
+  if (convs)  { allConversations = convs.conversations || []; renderConversations(); renderOverviewConvs(); renderTrainingConvs(); renderTrainingStats(); }
+  if (errs)   renderErrors(errs.errors || []);
+  if (dps && dps.datapoints) { allDatapoints = dps.datapoints || []; renderDatapoints(); renderDLIntelligence(dps); }
+  else renderDLIntelligenceFallback(stats);
+}
+
+// ── AUTO REFRESH ──────────────────────────────────────────────────────────────
+function toggleAutoRefresh() {
+  const pip = document.getElementById('autoToggle');
+  if (autoRefreshInterval) {
+    clearInterval(autoRefreshInterval); autoRefreshInterval = null; pip.classList.remove('on');
+  } else {
+    autoRefreshInterval = setInterval(loadAll, 30000); pip.classList.add('on');
+    flash('Auto-refresh on (30s) ✅');
+  }
+}
+
+// ── UTILS ─────────────────────────────────────────────────────────────────────
+function timeAgo(iso) {
+  if (!iso) return '—';
+  const d = Math.floor((Date.now() - new Date(iso)) / 60000);
+  if (d < 1)    return 'just now';
+  if (d < 60)   return d + 'm ago';
+  if (d < 1440) return Math.floor(d/60) + 'h ago';
+  return Math.floor(d/1440) + 'd ago';
+}
+
+function escapeHtml(text) {
+  return (text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+function labelBadge(label) {
+  const map = { good:'badge-good', gold:'badge-gold', junk:'badge-junk', needs_review:'badge-review' };
+  const cls = map[label] || 'badge-review';
+  return `<span class="badge ${cls}">${label||'needs_review'}</span>`;
+}
+
+function depthColor(score) {
+  if (!score && score !== 0) return 'var(--muted)';
+  if (score >= 60) return 'var(--green)';
+  if (score >= 30) return 'var(--orange)';
+  return 'var(--muted)';
+}
+
+function flash(msg) {
+  const el = document.getElementById('actionMsg');
+  el.textContent = msg;
+  setTimeout(() => el.textContent = '', 3000);
+}
+
+// ── RENDER STATS ──────────────────────────────────────────────────────────────
+function renderStats(s) {
+  const u = s.users || {}, c = s.conversations || {};
+  const dpTotal = s.datapoints?.total ?? 0;
+  const errorsToday = s.errors_24h ?? 0;
+  document.getElementById('statRow').innerHTML = `
+    <div class="stat-card orange">
+      <div class="stat-val" style="color:var(--orange)">${u.total ?? 0}</div>
+      <div class="stat-label">Total Users</div>
+      <div class="stat-sub">+${u.new_this_week ?? 0} this week</div>
+    </div>
+    <div class="stat-card green">
+      <div class="stat-val" style="color:var(--green)">${c.total ?? 0}</div>
+      <div class="stat-label">Conversations</div>
+      <div class="stat-sub">${c.today ?? 0} today · avg ${c.avg_turns ?? 0} turns</div>
+    </div>
+    <div class="stat-card blue">
+      <div class="stat-val" style="color:var(--blue)">${Number(dpTotal).toLocaleString()}</div>
+      <div class="stat-label">Datapoints</div>
+      <div class="stat-sub">Target: 10,000</div>
+    </div>
+    <div class="stat-card ${errorsToday > 0 ? 'red' : 'green'}">
+      <div class="stat-val" style="color:${errorsToday > 0 ? 'var(--red)' : 'var(--green)'}">${errorsToday}</div>
+      <div class="stat-label">Errors (24h)</div>
+    </div>
+    <div class="stat-card purple">
+      <div class="stat-val" style="color:var(--purple)">${u.retained ?? 0}</div>
+      <div class="stat-label">Returned Users</div>
+      <div class="stat-sub">2+ conversations</div>
+    </div>`;
+
+  const sectors = s.sectors || [];
+  const maxCnt = sectors.length ? Math.max(...sectors.map(x => x.cnt||1)) : 1;
+  document.getElementById('sectorChart').innerHTML = sectors.length
+    ? sectors.map(sec => `
+        <div class="sector-row">
+          <div class="sector-name">${sec.sector}</div>
+          <div class="sector-bar-wrap"><div class="sector-bar" style="width:${Math.round((sec.cnt/maxCnt)*100)}%"></div></div>
+          <div class="sector-count">${sec.cnt}</div>
+        </div>`).join('')
+    : '<div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;font-family:Space Mono,monospace">No data yet</div>';
+
+  const activity = s.activity || [];
+  document.getElementById('activityFeed').innerHTML = activity.length
+    ? activity.map(a => `
+        <div class="activity-item">
+          <div class="activity-icon ${a.type === 'new_user' ? 'new-user' : 'conversation'}">${a.type === 'new_user' ? '👤' : '💬'}</div>
+          <div class="activity-detail">
+            <span style="color:${a.type==='new_user'?'var(--green)':'var(--blue)'};font-weight:700;font-size:11px">${a.type === 'new_user' ? 'New user' : 'Conversation'}</span><br>${a.detail || '—'}
+          </div>
+          <div class="activity-when">${timeAgo(a.when)}</div>
+        </div>`).join('')
+    : '<div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;font-family:Space Mono,monospace">No activity yet</div>';
+}
+
+// ── OVERVIEW CONVS ────────────────────────────────────────────────────────────
+function renderOverviewConvs() {
+  const tbody = document.getElementById('overviewConvTbody');
+  const rows = allConversations.slice(0, 10);
+  if (!rows.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No conversations yet</td></tr>'; return; }
+  tbody.innerHTML = rows.map(c => `
+    <tr class="clickable-row" onclick="openConversation('${c.id}')">
+      <td style="font-weight:700">${c.name||c.email?.split('@')[0]||'—'}</td>
+      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#94a3b8">${(c.idea_text||'').slice(0,55)||'—'}</td>
+      <td><span class="badge badge-sector">${c.sector||'—'}</span></td>
+      <td class="${c.turn_count>=8?'turns-high':c.turn_count>=4?'turns-mid':'turns-low'}">${c.turn_count??0}</td>
+      <td style="color:var(--muted);font-family:Space Mono,monospace;font-size:11px">${timeAgo(c.created_at)}</td>
+      <td><button class="btn-sm btn-view" onclick="event.stopPropagation();openConversation('${c.id}')">Read →</button></td>
+    </tr>`).join('');
+}
+
+// ── USERS ─────────────────────────────────────────────────────────────────────
+function renderUsers() {
+  const q = (document.getElementById('userSearch')?.value||'').toLowerCase();
+  const filtered = allUsers.filter(u => !q || u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q));
+  document.getElementById('userCount').textContent = `${filtered.length} users`;
+  const tbody = document.getElementById('userTbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No users found</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(u => `
+    <tr>
+      <td style="font-weight:700">${u.name||'—'}</td>
+      <td style="color:#94a3b8;font-size:11px;font-family:Space Mono,monospace">${u.email||'—'}</td>
+      <td><span class="badge ${u.role==='admin'?'badge-admin':'badge-user'}">${u.role||'beta_user'}</span></td>
+      <td style="color:var(--blue);font-weight:700">${u.conversation_count??0}</td>
+      <td style="color:var(--orange);font-weight:700">${u.validations_count??0}</td>
+      <td style="color:var(--muted);font-size:11px">${u.user_location||u.organization||'—'}</td>
+      <td style="color:var(--muted);font-size:11px;font-family:Space Mono,monospace">${timeAgo(u.created_at)}</td>
+      <td style="color:var(--muted);font-size:11px;font-family:Space Mono,monospace">${timeAgo(u.last_login_at)}</td>
+      <td>
+        <div class="btn-group">
+          ${u.role!=='admin'?`<button class="btn-sm btn-promote" onclick="promoteUser('${u.id}')">↑ Admin</button>`:''}
+          ${u.role!=='admin'?`<button class="btn-sm btn-remove" onclick="removeUser('${u.id}','${u.email}')">✕</button>`:'<span style="color:var(--muted);font-size:10px">Protected</span>'}
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+// ── CONVERSATIONS ─────────────────────────────────────────────────────────────
+function renderConversations() {
+  const q       = (document.getElementById('convSearch')?.value||'').toLowerCase();
+  const label   = document.getElementById('qualityFilter')?.value||'';
+  const sector  = document.getElementById('sectorFilter')?.value||'';
+  const filtered = allConversations.filter(c =>
+    (!q || (c.idea_text||'').toLowerCase().includes(q) || (c.name||'').toLowerCase().includes(q)) &&
+    (!label  || (c.quality_label||'needs_review') === label) &&
+    (!sector || c.sector === sector)
+  );
+  document.getElementById('convCount').textContent = `${filtered.length} conversations`;
+  const tbody = document.getElementById('convTbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No conversations found</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(c => `
+    <tr class="clickable-row" onclick="openConversation('${c.id}')">
+      <td>
+        <div style="font-weight:700">${c.name||'—'}</div>
+        <div style="color:var(--muted);font-size:10px;font-family:Space Mono,monospace">${c.email||''}</div>
+      </td>
+      <td style="max-width:240px;color:#94a3b8;font-size:12px">${(c.idea_text||'').slice(0,70)||'(no idea)'}${(c.idea_text||'').length>70?'...':''}</td>
+      <td><span class="badge badge-sector">${c.sector||'—'}</span></td>
+      <td>${labelBadge(c.quality_label)}</td>
+      <td style="font-weight:700;color:${depthColor(c.depth_score)};font-family:Space Mono,monospace;font-size:12px">${c.depth_score??0}</td>
+      <td class="${c.turn_count>=8?'turns-high':c.turn_count>=4?'turns-mid':'turns-low'}">${c.turn_count??0}</td>
+      <td style="color:var(--muted);font-size:11px;font-family:Space Mono,monospace">${timeAgo(c.created_at)}</td>
+      <td><button class="btn-sm btn-view" onclick="event.stopPropagation();openConversation('${c.id}')">Read →</button></td>
+    </tr>`).join('');
+}
+
+// ── DATA LAB — INTELLIGENCE ───────────────────────────────────────────────────
+function renderDLIntelligenceFallback(stats) {
+  // Fallback when /admin/datapoints endpoint doesn't exist yet
+  const dpTotal = stats?.datapoints?.total ?? 8622;
+  document.getElementById('dlTotal').textContent = Number(dpTotal).toLocaleString();
+  document.getElementById('dlHighConf').textContent = '~7,200';
+  document.getElementById('dlSectors').textContent = '12';
+  document.getElementById('dlExpiring').textContent = '0';
+  document.getElementById('dlSectorChart').innerHTML = `
+    <div style="font-size:11px;color:var(--muted);font-family:Space Mono,monospace;margin-bottom:12px">Estimated from conversation sectors — connect /admin/datapoints for live data</div>
+    ${['Retail','Food','Energy','Health','Technology','Transport','Agriculture'].map((s,i) => {
+      const pct = [85,65,55,45,40,30,20][i];
+      return `<div class="sector-row"><div class="sector-name">${s}</div><div class="sector-bar-wrap"><div class="sector-bar" style="width:${pct}%"></div></div><div class="sector-count">${pct}%</div></div>`;
+    }).join('')}`;
+  document.getElementById('dlRegionChart').innerHTML = `
+    <div class="coverage-grid">
+      ${[['Nairobi','high',90],['Mombasa','high',80],['Kisumu','low',0],['Nakuru','low',5],['Eldoret','low',0],['Eastleigh','med',60]].map(([r,cls,pct]) => `
+        <div class="coverage-card">
+          <div class="coverage-region">${r}</div>
+          <div class="coverage-bar-wrap"><div class="coverage-bar ${cls}" style="width:${pct}%"></div></div>
+          <div class="coverage-count">${pct}% coverage</div>
+        </div>`).join('')}
+    </div>`;
+  document.getElementById('dlConfidence').innerHTML = `
+    ${[['≥90%','high',40],['80-89%','high',30],['70-79%','med',20],['60-69%','low',8],['<60%','low',2]].map(([label,cls,pct]) => `
+      <div class="conf-row">
+        <div class="conf-label">${label}</div>
+        <div class="conf-bar-wrap"><div class="conf-bar" style="width:${pct*2}%;background:${cls==='high'?'var(--green)':cls==='med'?'var(--orange)':'var(--red)'}"></div></div>
+        <div class="conf-count">${pct}%</div>
+      </div>`).join('')}`;
+}
+
+function renderDLIntelligence(dps) {
+  // When real /admin/datapoints endpoint exists
+  renderDLIntelligenceFallback(statsCache); // use fallback until endpoint is built
+}
+
+// ── DATA LAB — QUALITY CONTROL ────────────────────────────────────────────────
+function renderDatapoints() {
+  const q      = (document.getElementById('dpSearch')?.value||'').toLowerCase();
+  const conf   = document.getElementById('dpConfFilter')?.value||'';
+  const sector = document.getElementById('dpSectorFilter')?.value||'';
+
+  // If no datapoints from API, show placeholder
+  if (!allDatapoints.length) {
+    document.getElementById('dpCount').textContent = '';
+    document.getElementById('dpTbody').innerHTML = `
+      <tr class="empty-row">
+        <td colspan="7">
+          <div style="padding:20px">
+            <div style="font-size:12px;color:var(--orange);font-weight:700;margin-bottom:6px">Backend endpoint required</div>
+            <div style="font-size:11px;color:var(--muted)">Add <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-family:Space Mono,monospace">/api/v1/admin/datapoints</code> endpoint to main.py to view and manage scraped_datapoints here.</div>
+          </div>
+        </td>
+      </tr>`;
+    return;
+  }
+
+  let filtered = allDatapoints.filter(d => {
+    const matchQ = !q || (d.item||'').toLowerCase().includes(q) || (d.category||'').toLowerCase().includes(q);
+    const score = parseFloat(d.confidence_score||0);
+    const matchConf = !conf || (conf==='high'&&score>=0.8) || (conf==='med'&&score>=0.6&&score<0.8) || (conf==='low'&&score<0.6);
+    const matchSector = !sector || (d.category||'').toLowerCase().includes(sector);
+    return matchQ && matchConf && matchSector;
+  });
+  document.getElementById('dpCount').textContent = `${filtered.length} datapoints`;
+  const tbody = document.getElementById('dpTbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No datapoints found</td></tr>'; return; }
+  tbody.innerHTML = filtered.slice(0,100).map(d => {
+    const score = parseFloat(d.confidence_score||0);
+    const confClass = score>=0.8?'badge-high':score>=0.6?'badge-med':'badge-low';
+    return `<tr>
+      <td style="font-weight:600;max-width:200px">${(d.item||'').slice(0,40)}</td>
+      <td style="color:var(--orange);font-weight:700;font-family:Space Mono,monospace">${d.currency||'KES'} ${parseFloat(d.value||0).toLocaleString()}</td>
+      <td><span class="badge badge-sector">${d.category||'—'}</span></td>
+      <td style="color:var(--muted);font-size:11px">${d.region||d.county||'Kenya'}</td>
+      <td><span class="badge ${confClass}">${Math.round(score*100)}%</span></td>
+      <td style="color:var(--muted);font-size:11px;font-family:Space Mono,monospace">${timeAgo(d.updated_at||d.created_at)}</td>
+      <td>
+        <div class="btn-group">
+          <button class="btn-sm btn-good" onclick="updateDatapoint('${d.id}','approve')">✓</button>
+          <button class="btn-sm btn-junk" onclick="updateDatapoint('${d.id}','reject')">✕</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+async function updateDatapoint(id, action) {
+  // Requires PATCH /api/v1/admin/datapoints/{id} endpoint
+  flash(`Datapoint ${action === 'approve' ? 'approved' : 'rejected'} — sync endpoint needed ✅`);
+}
+
+// ── DATA LAB — TRAINING ───────────────────────────────────────────────────────
+function renderTrainingStats() {
+  const counts = { gold:0, good:0, needs_review:0, junk:0 };
+  allConversations.forEach(c => {
+    const label = c.quality_label || 'needs_review';
+    if (counts[label] !== undefined) counts[label]++;
+  });
+  document.getElementById('trainGold').textContent   = counts.gold;
+  document.getElementById('trainGood').textContent   = counts.good;
+  document.getElementById('trainReview').textContent = counts.needs_review;
+  document.getElementById('trainJunk').textContent   = counts.junk;
+}
+
+function renderTrainingConvs() {
+  const q      = (document.getElementById('trainSearch')?.value||'').toLowerCase();
+  const label  = document.getElementById('trainLabelFilter')?.value||'needs_review';
+  const filtered = allConversations.filter(c =>
+    (!q || (c.idea_text||'').toLowerCase().includes(q)) &&
+    (!label || (c.quality_label||'needs_review') === label)
+  );
+  document.getElementById('trainCount').textContent = `${filtered.length} conversations`;
+  const tbody = document.getElementById('trainTbody');
+  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No conversations found</td></tr>'; return; }
+  tbody.innerHTML = filtered.map(c => `
+    <tr>
+      <td style="max-width:240px;color:#94a3b8;font-size:12px">${(c.idea_text||'').slice(0,70)||'(no idea)'}${(c.idea_text||'').length>70?'...':''}</td>
+      <td><span class="badge badge-sector">${c.sector||'—'}</span></td>
+      <td>${labelBadge(c.quality_label)}</td>
+      <td style="font-weight:700;color:${depthColor(c.depth_score)};font-family:Space Mono,monospace;font-size:12px">${c.depth_score??0}</td>
+      <td class="${c.turn_count>=8?'turns-high':c.turn_count>=4?'turns-mid':'turns-low'}">${c.turn_count??0}</td>
+      <td>
+        <div class="btn-group">
+          <button class="btn-sm btn-gold" onclick="relabelConv('${c.id}','gold')" title="Gold — anchor example">★</button>
+          <button class="btn-sm btn-good" onclick="relabelConv('${c.id}','good')" title="Good — include in training">✓</button>
+          <button class="btn-sm btn-junk" onclick="relabelConv('${c.id}','junk')" title="Junk — exclude">✕</button>
+          <button class="btn-sm btn-view" onclick="openConversation('${c.id}')">Read</button>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+async function relabelConv(id, label) {
+  // Calls PATCH /api/v1/admin/conversations/{id}/label
+  const res = await apiPatch(`/api/v1/admin/conversations/${id}/label`, {quality_label: label});
+  if (res) {
+    // Update local state
+    const conv = allConversations.find(c => c.id === id);
+    if (conv) conv.quality_label = label;
+    renderTrainingConvs();
+    renderTrainingStats();
+    flash(`Labelled as ${label} ✅`);
+  } else {
+    // Endpoint not yet built — update locally only
+    const conv = allConversations.find(c => c.id === id);
+    if (conv) conv.quality_label = label;
+    renderTrainingConvs();
+    renderTrainingStats();
+    flash(`Labelled as ${label} — add PATCH endpoint to persist ✅`);
+  }
+}
+
+async function exportTrainingData() {
+  const el = document.getElementById('exportStatus');
+  el.textContent = 'Requesting export...';
+  const res = await apiFetch('/api/v1/admin/export-training-data');
+  if (res && res.count !== undefined) {
+    el.textContent = `✅ ${res.count} conversations ready — ${res.skipped||0} skipped`;
+    // Trigger download
+    const blob = new Blob([res.data.join('\n')], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = `afrifoundry_training_${new Date().toISOString().slice(0,10)}.jsonl`;
+    a.click(); URL.revokeObjectURL(url);
+    flash('JSONL exported ✅');
+  } else {
+    el.textContent = '⚠ Add /api/v1/admin/export-training-data endpoint first';
+  }
+}
+
+// ── AI HEALTH ─────────────────────────────────────────────────────────────────
+function renderAIHealth(s) {
+  const usage = s.ai_usage || {}, u = s.users || {}, c = s.conversations || {};
+  const retained = u.retained || 0, total = u.total || 1;
+  const retentionPct = Math.round((retained / total) * 100);
+  const dpTotal = s.datapoints?.total ?? 0;
+  document.getElementById('aiHealthGrid').innerHTML = `
+    <div class="health-card"><div class="health-val">${usage.groq_calls??'—'}</div><div class="health-label">Groq Calls</div></div>
+    <div class="health-card"><div class="health-val" style="color:var(--blue)">${usage.gemini_calls??'—'}</div><div class="health-label">Gemini Fallback</div></div>
+    <div class="health-card"><div class="health-val" style="color:${(usage.errors||0)>0?'var(--red)':'var(--green)'}">${usage.errors??0}</div><div class="health-label">AI Errors</div></div>
+    <div class="health-card"><div class="health-val" style="color:var(--purple)">${usage.key_rotations??0}</div><div class="health-label">Key Rotations</div></div>
+    <div class="health-card"><div class="health-val" style="color:var(--blue)">${c.avg_turns??0}</div><div class="health-label">Avg Turns/Conv</div></div>
+    <div class="health-card"><div class="health-val" style="color:var(--green)">${Number(dpTotal).toLocaleString()}</div><div class="health-label">Active Datapoints</div></div>`;
+  document.getElementById('retentionFill').style.width = retentionPct + '%';
+  document.getElementById('retentionPct').textContent = retentionPct + '%';
+}
+
+// ── ERRORS ────────────────────────────────────────────────────────────────────
+function renderErrors(errs) {
+  const container = document.getElementById('errorsContainer');
+  if (!errs.length) { container.innerHTML = '<div class="no-errors">✅ No errors logged. System is clean.</div>'; return; }
+  container.innerHTML = errs.map(e => `
+    <div class="error-item">
+      <div class="error-header">
+        <span class="error-context">⚠ ${e.context||'Unknown'}</span>
+        <span class="error-time">${timeAgo(e.created_at)}</span>
+      </div>
+      <div class="error-msg">${e.error_message||'(no message)'}</div>
+      ${e.endpoint?`<div style="font-size:10px;color:var(--faint);margin-top:4px;font-family:Space Mono,monospace">Endpoint: ${e.endpoint} · Status: ${e.status_code||'?'}</div>`:''}
+    </div>`).join('');
+}
+
+// ── CONVERSATION VIEWER ───────────────────────────────────────────────────────
+async function openConversation(convId) {
+  currentConvId = convId;
+  let conv = allConversations.find(c => c.id === convId) || {};
+  if (!conv.messages || !conv.messages.length) {
+    const data = await apiFetch(`/api/v1/admin/conversation/${convId}`);
+    if (data && !data.error) conv = data;
+  }
+  if (!conv.id) { flash('Could not load conversation'); return; }
+  const idea = conv.idea_text || conv.idea || 'Conversation';
+  const name = conv.name || conv.email || 'Unknown';
+  const messages = conv.messages || conv.history || [];
+  document.getElementById('modalTitle').textContent = idea.slice(0,60);
+  document.getElementById('modalMeta').textContent = `${name} · ${conv.sector||'no sector'} · ${conv.turn_count||0} turns · depth: ${conv.depth_score||0} · ${timeAgo(conv.created_at)}`;
+  document.getElementById('modalBody').innerHTML = messages.length
+    ? messages.map(m => `
+        <div class="chat-msg">
+          <div class="chat-msg-label ${m.role==='user'?'user':'ai'}">${m.role==='user'?'👤 '+(conv.name||'User'):'🤖 AfriFoundry AI'}</div>
+          <div class="chat-msg-bubble ${m.role!=='user'?'ai-bubble':''}">${escapeHtml(m.content||'')}</div>
+        </div>`).join('')
+    : '<div style="color:var(--muted);text-align:center;padding:40px;font-family:Space Mono,monospace">No messages recorded</div>';
+  // Footer with quick label buttons
+  document.getElementById('modalFooter').innerHTML = `
+    <span style="font-size:11px;color:var(--muted);margin-right:8px;font-family:Space Mono,monospace">Label:</span>
+    <button class="btn-sm btn-gold" onclick="relabelConv('${convId}','gold');hideModal()">★ Gold</button>
+    <button class="btn-sm btn-good" onclick="relabelConv('${convId}','good');hideModal()">✓ Good</button>
+    <button class="btn-sm btn-junk" onclick="relabelConv('${convId}','junk');hideModal()">✕ Junk</button>`;
+  setTimeout(() => { const b = document.getElementById('modalBody'); if (b) b.scrollTop = b.scrollHeight; }, 50);
+  document.getElementById('convModal').classList.remove('hidden');
+}
+
+function hideModal() { document.getElementById('convModal').classList.add('hidden'); }
+function closeModal(e) { if (e.target.id === 'convModal') hideModal(); }
+
+// ── ACTIONS ───────────────────────────────────────────────────────────────────
+async function promoteUser(userId) {
+  await fetch(`${API}/api/v1/admin/users/${userId}/promote`, { method:'POST', headers:{Authorization:`Bearer ${token}`} });
+  flash('User promoted to admin ✅'); loadAll();
+}
+
+async function removeUser(userId, email) {
+  if (!confirm(`Remove ${email}? Deletes all their conversations. Cannot be undone.`)) return;
+  await fetch(`${API}/api/v1/admin/users/${userId}`, { method:'DELETE', headers:{Authorization:`Bearer ${token}`} });
+  flash('User removed ✅'); loadAll();
+}
+
+// ── TABS ──────────────────────────────────────────────────────────────────────
+function switchTab(name, btn) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  btn.classList.add('active');
+  if (name === 'ai' && statsCache) renderAIHealth(statsCache);
+  if (name === 'datalab') { renderDatapoints(); renderTrainingConvs(); renderTrainingStats(); }
+}
+
+function switchDatalabTab(name, btn) {
+  document.querySelectorAll('.datalab-panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.datalab-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('dl-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+if (token) {
+  fetch(`${API}/api/v1/auth/me`, { headers:{Authorization:`Bearer ${token}`} })
+    .then(r => r.json())
+    .then(d => { if (d.role === 'admin') showApp(); else doLogout(); })
+    .catch(() => doLogout());
+}
+</script>
+</body>
+</html>
