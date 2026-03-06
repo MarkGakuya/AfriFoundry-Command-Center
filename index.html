@@ -322,6 +322,7 @@
         <button class="tab" onclick="switchTab('afriscout',this)">AfriScout</button>
         <button class="tab" onclick="switchTab('ai',this)">AI Health</button>
         <button class="tab" onclick="switchTab('errors',this)">Errors</button>
+        <button class="tab" onclick="switchTab('finetune',this)">⚡ Fine-Tune</button>
       </div>
     </div>
     <div class="header-right">
@@ -568,7 +569,7 @@
               <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">
                 Format: {"messages": [{"role": "user"...}, {"role": "assistant"...}]}
               </div>
-              <button class="btn-sm btn-export" onclick="exportTrainingData()" style="width:100%">⬇ Export JSONL for Fine-Tuning</button>
+              <button class="btn-sm btn-export" onclick="exportV2()" style="width:100%">⬇ Export JSONL v2 for Fine-Tuning</button>
               <div style="margin-top:10px;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace" id="exportStatus"></div>
             </div>
           </div>
@@ -769,6 +770,157 @@
       <div id="errorsContainer"><div class="loading">Loading</div></div>
     </div>
 
+
+    <!-- ── FINE-TUNE ──────────────────────────────────────────── -->
+    <div class="panel" id="panel-finetune">
+
+      <!-- Progress hero -->
+      <div class="ft-hero">
+        <div class="ft-ring-wrap">
+          <svg class="ft-ring-svg" viewBox="0 0 110 110">
+            <defs>
+              <linearGradient id="ftGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#f59e0b"/>
+                <stop offset="100%" stop-color="#f97316"/>
+              </linearGradient>
+            </defs>
+            <circle class="ft-ring-bg" cx="55" cy="55" r="47"/>
+            <circle class="ft-ring-fill" cx="55" cy="55" r="47" id="ftRingFill" style="stroke-dashoffset:295"/>
+          </svg>
+          <div class="ft-ring-text">
+            <div class="ft-ring-num" id="ftGoldNum">0</div>
+            <div class="ft-ring-denom">/ 500</div>
+          </div>
+        </div>
+        <div class="ft-hero-body">
+          <div class="ft-hero-title">Gold Conversations — V2 Training Progress</div>
+          <div class="ft-hero-sub" id="ftHeroSub">Review and label conversations gold to build the fine-tuning dataset. At 500 gold conversations, V2 training runs on Kaggle. V2 bakes AfriFoundry's voice directly into the model weights — no more prompt injection.</div>
+          <div class="ft-progress-track">
+            <div class="ft-progress-fill" id="ftProgressFill" style="width:0%"></div>
+          </div>
+          <div class="ft-progress-label">
+            <span id="ftProgressLeft">0 gold conversations</span>
+            <span id="ftProgressRight">500 needed to trigger V2</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Action buttons -->
+      <div class="ft-action-row">
+        <button class="btn-ft btn-ft-gold" onclick="startFastReview()">⚡ Fast Review Mode</button>
+        <button class="btn-ft btn-ft-orange" onclick="exportV2()">⬇ Export JSONL v2</button>
+        <button class="btn-ft btn-ft-blue" onclick="promoteByFeedback()">↑ Promote by Feedback</button>
+        <button class="btn-ft btn-ft-green" onclick="rescoreAll()">↺ Rescore All</button>
+      </div>
+
+      <div class="two-col">
+        <!-- V2 Readiness Checklist -->
+        <div class="card">
+          <div class="card-title">V2 Readiness Checklist</div>
+          <div style="padding:16px">
+            <div class="checklist" id="ftChecklist">
+              <div class="check-item" id="chk-gold">
+                <div class="check-icon">⬜</div>
+                <div><div class="check-title">500 Gold Conversations</div><div class="check-detail" id="chk-gold-detail">0 / 500 — keep labelling</div></div>
+              </div>
+              <div class="check-item" id="chk-balance">
+                <div class="check-icon">⬜</div>
+                <div><div class="check-title">Mode Balance (≥10% each)</div><div class="check-detail" id="chk-balance-detail">Need validator, explorer, learner examples</div></div>
+              </div>
+              <div class="check-item" id="chk-turns">
+                <div class="check-icon">⬜</div>
+                <div><div class="check-title">Avg Turns ≥ 5</div><div class="check-detail" id="chk-turns-detail">Deep conversations only — short ones add noise</div></div>
+              </div>
+              <div class="check-item" id="chk-sectors">
+                <div class="check-icon">⬜</div>
+                <div><div class="check-title">5+ Sectors Represented</div><div class="check-detail" id="chk-sectors-detail">Sector diversity = general African intelligence</div></div>
+              </div>
+              <div class="check-item" id="chk-junk">
+                <div class="check-icon">⬜</div>
+                <div><div class="check-title">Junk &lt; 20% of total</div><div class="check-detail" id="chk-junk-detail">Too much junk = noisy training signal</div></div>
+              </div>
+              <div class="check-item" id="chk-export">
+                <div class="check-icon">⬜</div>
+                <div><div class="check-title">Export Validated</div><div class="check-detail">Run export and confirm JSONL is clean</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mode balance -->
+        <div class="card">
+          <div class="card-title">Training Data — Mode Balance</div>
+          <div style="padding:16px">
+            <div style="font-size:11px;color:var(--muted);margin-bottom:16px;font-family:Space Mono,monospace">Gold + Good conversations by mode. Fine-tuned model should be balanced across all three.</div>
+            <div class="mode-bar-row">
+              <div class="mode-label" style="color:var(--orange)">Validator</div>
+              <div class="mode-track"><div class="mode-fill" id="modeBarV" style="width:0%;background:var(--orange)"></div></div>
+              <div class="mode-count" id="modeCntV">0</div>
+            </div>
+            <div class="mode-bar-row">
+              <div class="mode-label" style="color:var(--blue)">Explorer</div>
+              <div class="mode-track"><div class="mode-fill" id="modeBarE" style="width:0%;background:var(--blue)"></div></div>
+              <div class="mode-count" id="modeCntE">0</div>
+            </div>
+            <div class="mode-bar-row">
+              <div class="mode-label" style="color:var(--green)">Learner</div>
+              <div class="mode-track"><div class="mode-fill" id="modeBarL" style="width:0%;background:var(--green)"></div></div>
+              <div class="mode-count" id="modeCntL">0</div>
+            </div>
+            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
+              <div style="font-size:11px;color:var(--muted)">Target: Validator 60–70% · Explorer 15–20% · Learner 15–20%</div>
+              <div style="font-size:11px;color:var(--orange);margin-top:6px" id="modeWarning"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Training Pipeline Steps -->
+      <div class="card">
+        <div class="card-title">V2 Training Pipeline</div>
+        <div style="padding:16px">
+          <div class="pipeline-step">
+            <div class="pipeline-num done">1</div>
+            <div class="pipeline-body">
+              <div class="pipeline-title">Data Collection Infrastructure ✅</div>
+              <div class="pipeline-desc">Scrapers, precedents, expert questionnaires, county data. Conversations being logged and depth-scored on every save.</div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num active">2</div>
+            <div class="pipeline-body">
+              <div class="pipeline-title" style="color:var(--orange)">Gold Conversation Accumulation ← YOU ARE HERE</div>
+              <div class="pipeline-desc">Review all "needs_review" conversations. Label high-quality ones gold. Target: 500 gold conversations with ≥5 turns, balanced across modes and sectors.</div>
+              <div class="pipeline-action">
+                <button class="btn-ft btn-ft-gold" onclick="startFastReview()" style="font-size:11px;padding:6px 12px">⚡ Start Fast Review</button>
+              </div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num pending">3</div>
+            <div class="pipeline-body">
+              <div class="pipeline-title">Export & Validate Training JSONL</div>
+              <div class="pipeline-desc">Export gold+good conversations via v2 endpoint. Validate: no system prompt leakage, no internal tags, proper turn structure, min 2 turns per example.</div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num pending">4</div>
+            <div class="pipeline-body">
+              <div class="pipeline-title">QLoRA Fine-Tuning on Kaggle</div>
+              <div class="pipeline-desc">Upload JSONL to Kaggle. Run afrifoundry_v2_finetune.ipynb on T4 x2 GPU. ~3-4 hours training. Uses Llama 3.1 8B base with LoRA adapters (r=16, all attention + MLP layers).</div>
+            </div>
+          </div>
+          <div class="pipeline-step">
+            <div class="pipeline-num pending">5</div>
+            <div class="pipeline-body">
+              <div class="pipeline-title">Deploy V2 — Swap Inference Engine</div>
+              <div class="pipeline-desc">Push merged model to Hugging Face. Update main.py to use HF Inference Endpoint. A/B test V2 vs V1. Expected: voice baked in, no prompt injection tax, +15% quality.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
   </div>
 </div>
 
@@ -873,6 +1025,7 @@ async function loadAll() {
   if (errs)   renderErrors(errs.errors || []);
   if (dps && dps.datapoints) { allDatapoints = dps.datapoints || []; renderDatapoints(); renderDLIntelligence(dps); }
   else renderDLIntelligenceFallback(stats);
+  renderFineTune();
 }
 
 // ── AUTO REFRESH ──────────────────────────────────────────────────────────────
@@ -1270,18 +1423,74 @@ async function openConversation(convId) {
           <div class="chat-msg-bubble ${m.role!=='user'?'ai-bubble':''}">${escapeHtml(m.content||'')}</div>
         </div>`).join('')
     : '<div style="color:var(--muted);text-align:center;padding:40px;font-family:Space Mono,monospace">No messages recorded</div>';
-  // Footer with quick label buttons
+  // Footer with quick label buttons + keyboard hints
+  const isReviewMode = (document.getElementById('trainLabelFilter')?.value === 'needs_review');
   document.getElementById('modalFooter').innerHTML = `
-    <span style="font-size:11px;color:var(--muted);margin-right:8px;font-family:Space Mono,monospace">Label:</span>
-    <button class="btn-sm btn-gold" onclick="relabelConv('${convId}','gold');hideModal()">★ Gold</button>
-    <button class="btn-sm btn-good" onclick="relabelConv('${convId}','good');hideModal()">✓ Good</button>
-    <button class="btn-sm btn-junk" onclick="relabelConv('${convId}','junk');hideModal()">✕ Junk</button>`;
+    <div class="shortcut-bar" style="flex:1;padding:0;background:none;border:none">
+      <span class="shortcut-item"><span class="kbd">G</span> Gold</span>
+      <span class="shortcut-item"><span class="kbd">V</span> Good</span>
+      <span class="shortcut-item"><span class="kbd">J</span> Junk</span>
+      <span class="shortcut-item"><span class="kbd">N</span> Next</span>
+      <span class="shortcut-item"><span class="kbd">Esc</span> Close</span>
+    </div>
+    <button class="btn-sm btn-gold" onclick="relabelAndAdvance('${convId}','gold')">★ Gold</button>
+    <button class="btn-sm btn-good" onclick="relabelAndAdvance('${convId}','good')">✓ Good</button>
+    <button class="btn-sm btn-junk" onclick="relabelAndAdvance('${convId}','junk')">✕ Junk</button>
+    ${isReviewMode ? '<button class="btn-sm btn-view" onclick="advanceToNext()">→ Next</button>' : ''}
+  `;
   setTimeout(() => { const b = document.getElementById('modalBody'); if (b) b.scrollTop = b.scrollHeight; }, 50);
   document.getElementById('convModal').classList.remove('hidden');
 }
 
-function hideModal() { document.getElementById('convModal').classList.add('hidden'); }
+function hideModal() { document.getElementById('convModal').classList.add('hidden'); currentConvId = null; }
 function closeModal(e) { if (e.target.id === 'convModal') hideModal(); }
+
+// Fast review state
+let reviewQueue = [];
+let reviewIndex = 0;
+
+function startFastReview() {
+  reviewQueue = allConversations.filter(c => (c.quality_label || 'needs_review') === 'needs_review' && c.turn_count >= 3);
+  reviewIndex = 0;
+  if (!reviewQueue.length) { flash('No conversations need review right now ✅'); return; }
+  flash(`Fast review: ${reviewQueue.length} conversations to review`);
+  // Switch to training tab and needs_review filter
+  document.getElementById('trainLabelFilter').value = 'needs_review';
+  renderTrainingConvs();
+  openConversation(reviewQueue[0].id);
+}
+
+function advanceToNext() {
+  reviewIndex++;
+  if (reviewIndex < reviewQueue.length) {
+    openConversation(reviewQueue[reviewIndex].id);
+  } else {
+    hideModal();
+    flash(`Review complete! ${reviewQueue.length} conversations processed ✅`);
+    reviewQueue = [];
+  }
+}
+
+async function relabelAndAdvance(id, label) {
+  await relabelConv(id, label);
+  renderFineTune();
+  if (reviewQueue.length > 0) {
+    advanceToNext();
+  } else {
+    hideModal();
+  }
+}
+
+// Keyboard shortcuts for modal
+document.addEventListener('keydown', function(e) {
+  if (document.getElementById('convModal').classList.contains('hidden')) return;
+  if (e.target.tagName === 'INPUT') return;
+  if (e.key === 'g' || e.key === 'G') { if (currentConvId) relabelAndAdvance(currentConvId, 'gold'); }
+  else if (e.key === 'v' || e.key === 'V') { if (currentConvId) relabelAndAdvance(currentConvId, 'good'); }
+  else if (e.key === 'j' || e.key === 'J') { if (currentConvId) relabelAndAdvance(currentConvId, 'junk'); }
+  else if (e.key === 'n' || e.key === 'N') { advanceToNext(); }
+  else if (e.key === 'Escape') { hideModal(); }
+});
 
 // ── ACTIONS ───────────────────────────────────────────────────────────────────
 async function promoteUser(userId) {
@@ -1303,6 +1512,7 @@ function switchTab(name, btn) {
   btn.classList.add('active');
   if (name === 'ai' && statsCache) renderAIHealth(statsCache);
   if (name === 'datalab') { renderDatapoints(); renderTrainingConvs(); renderTrainingStats(); }
+  if (name === 'finetune') { renderFineTune(); }
 }
 
 function switchDatalabTab(name, btn) {
@@ -1310,6 +1520,115 @@ function switchDatalabTab(name, btn) {
   document.querySelectorAll('.datalab-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('dl-' + name).classList.add('active');
   btn.classList.add('active');
+}
+
+// ── FINE-TUNE RENDER ──────────────────────────────────────────────────────────
+function renderFineTune() {
+  const gold   = allConversations.filter(c => c.quality_label === 'gold').length;
+  const good   = allConversations.filter(c => c.quality_label === 'good').length;
+  const review = allConversations.filter(c => (c.quality_label || 'needs_review') === 'needs_review').length;
+  const junk   = allConversations.filter(c => c.quality_label === 'junk').length;
+  const total  = allConversations.length;
+  const trainable = allConversations.filter(c => c.quality_label === 'gold' || c.quality_label === 'good');
+
+  // Progress ring
+  const pct = Math.min(gold / 500, 1);
+  const offset = 295 - (295 * pct);
+  const ring = document.getElementById('ftRingFill');
+  if (ring) ring.style.strokeDashoffset = offset;
+  const numEl = document.getElementById('ftGoldNum');
+  if (numEl) numEl.textContent = gold;
+  const fillEl = document.getElementById('ftProgressFill');
+  if (fillEl) fillEl.style.width = (pct * 100) + '%';
+  const leftEl = document.getElementById('ftProgressLeft');
+  if (leftEl) leftEl.textContent = `${gold} gold conversations`;
+  const rightEl = document.getElementById('ftProgressRight');
+  if (rightEl) rightEl.textContent = gold >= 500 ? '🎉 V2 READY — Run Kaggle notebook!' : `${500 - gold} more to trigger V2`;
+
+  // Checklist
+  const avgTurns = trainable.length ? Math.round(trainable.reduce((a,c) => a + (c.turn_count||0), 0) / trainable.length) : 0;
+  const sectors  = new Set(trainable.map(c => c.sector).filter(Boolean)).size;
+  const junkPct  = total ? Math.round((junk / total) * 100) : 0;
+
+  // Mode balance on gold+good
+  const modeV = trainable.filter(c => (c.conversation_type||'validator') === 'validator').length;
+  const modeE = trainable.filter(c => c.conversation_type === 'explorer').length;
+  const modeL = trainable.filter(c => c.conversation_type === 'learner').length;
+  const modeTotal = Math.max(modeV + modeE + modeL, 1);
+
+  function setCheck(id, done, detail) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    el.className = 'check-item' + (done ? ' done' : ' warn');
+    el.querySelector('.check-icon').textContent = done ? '✅' : '⬜';
+    const d = el.querySelector('.check-detail');
+    if (d && detail) d.textContent = detail;
+  }
+
+  setCheck('chk-gold',    gold >= 500,       `${gold} / 500 — ${500-gold > 0 ? 500-gold + ' more needed' : 'ready!'}`);
+  setCheck('chk-balance', modeE >= 1 && modeL >= 1, `Validator: ${modeV} · Explorer: ${modeE} · Learner: ${modeL}`);
+  setCheck('chk-turns',   avgTurns >= 5,     `Current avg: ${avgTurns} turns`);
+  setCheck('chk-sectors', sectors >= 5,      `${sectors} sectors in training data`);
+  setCheck('chk-junk',    junkPct < 20,      `Junk: ${junkPct}% of total (target: <20%)`);
+
+  // Mode bars
+  const setBar = (barId, cntId, val, total) => {
+    const pct = total ? Math.round((val/total)*100) : 0;
+    const b = document.getElementById(barId); if (b) b.style.width = pct + '%';
+    const c = document.getElementById(cntId); if (c) c.textContent = `${val} (${pct}%)`;
+  };
+  setBar('modeBarV','modeCntV', modeV, modeTotal);
+  setBar('modeBarE','modeCntE', modeE, modeTotal);
+  setBar('modeBarL','modeCntL', modeL, modeTotal);
+
+  const warn = document.getElementById('modeWarning');
+  if (warn) {
+    if (modeE < 1 || modeL < 1) warn.textContent = '⚠ Need more Explorer and Learner conversations before training';
+    else if (modeV / modeTotal > 0.8) warn.textContent = '⚠ Over-indexed on Validator — diversify before training';
+    else warn.textContent = '✅ Mode balance is acceptable for training';
+  }
+}
+
+async function exportV2() {
+  const el = document.getElementById('exportStatus');
+  if (el) el.textContent = 'Requesting v2 export...';
+  const res = await apiFetch('/api/v1/admin/export-training-data/v2?min_turns=2&limit=2000');
+  if (res && res.count !== undefined) {
+    const blob = new Blob([res.data.join('\n')], {type:'application/json'});
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement('a');
+    a.href = url; a.download = `afrifoundry_v2_training_${new Date().toISOString().slice(0,10)}.jsonl`;
+    a.click(); URL.revokeObjectURL(url);
+    // Mark export check done
+    const el2 = document.getElementById('chk-export');
+    if (el2) { el2.className = 'check-item done'; el2.querySelector('.check-icon').textContent = '✅'; }
+    flash(`V2 JSONL exported — ${res.count} conversations, ${res.skipped||0} skipped ✅`);
+  } else {
+    flash('⚠ Export endpoint not responding — check backend');
+  }
+}
+
+async function promoteByFeedback() {
+  flash('Running promote-by-feedback batch...');
+  const res = await apiPost('/api/v1/admin/promote-by-feedback', {});
+  if (res) {
+    flash(`Promoted ${res.promoted||0} to gold · Demoted ${res.demoted||0} to junk ✅`);
+    await loadAll();
+    renderFineTune();
+  } else {
+    flash('⚠ Endpoint not responding');
+  }
+}
+
+async function rescoreAll() {
+  flash('Rescoring all needs_review conversations...');
+  const res = await apiPost('/api/v1/admin/rescore-conversations', {});
+  if (res) {
+    flash(`Rescored ${res.rescored||0} conversations ✅`);
+    await loadAll();
+  } else {
+    flash('⚠ Rescore endpoint not responding');
+  }
 }
 
 // ── BOOT ──────────────────────────────────────────────────────────────────────
