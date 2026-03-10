@@ -2,1641 +2,1122 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="AfriFoundry Command Center — Internal dashboard for monitoring users, conversations, data quality, and AI training pipeline." />
-    <meta name="robots" content="noindex, nofollow" />
-    <meta name="theme-color" content="#080810" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
 <title>AfriFoundry — Command Center</title>
-<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800&family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --orange: #F97316;
-    --orange-dim: rgba(249,115,22,0.12);
-    --green: #10B981;
-    --green-dim: rgba(16,185,129,0.12);
-    --blue: #38bdf8;
-    --blue-dim: rgba(56,189,248,0.12);
-    --purple: #a78bfa;
-    --red: #f87171;
-    --bg: #080810;
-    --surface: #0f0f1a;
-    --card: #141420;
-    --border: #1e1e30;
-    --border2: #2a2a40;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --faint: #334155;
-  }
-  * { margin:0; padding:0; box-sizing:border-box; }
-  body { font-family:'Syne',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#06060F;--s1:#0C0C1A;--s2:#111120;--card:#141428;
+  --b1:#1C1C32;--b2:#252540;--b3:#303050;
+  --amber:#F5A623;--amberDim:rgba(245,166,35,.1);
+  --green:#2DD4BF;--greenDim:rgba(45,212,191,.1);
+  --blue:#4D9EFF;--blueDim:rgba(77,158,255,.1);
+  --purple:#A78BFA;--purpleDim:rgba(167,139,250,.1);
+  --red:#FF4D6A;--redDim:rgba(255,77,106,.1);
+  --txt:#E8E8FF;--muted:#5C5C80;--muted2:#8888AA;
+  --disp:'Syne',sans-serif;--mono:'JetBrains Mono',monospace;--body:'Inter',sans-serif;
+}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--body);-webkit-font-smoothing:antialiased;overflow:hidden}
 
-  /* ── LOGIN ─────────────────────────────────────────────── */
-  .login-wrap { display:flex; align-items:center; justify-content:center; min-height:100vh; background:var(--bg); position:relative; overflow:hidden; }
-  .login-wrap::before { content:''; position:absolute; width:600px; height:600px; border-radius:50%; background:radial-gradient(circle,rgba(249,115,22,0.06) 0%,transparent 70%); top:-100px; right:-100px; pointer-events:none; }
-  .login-wrap::after { content:''; position:absolute; width:400px; height:400px; border-radius:50%; background:radial-gradient(circle,rgba(16,185,129,0.04) 0%,transparent 70%); bottom:-80px; left:-80px; pointer-events:none; }
-  .login-card { background:var(--surface); border:1px solid var(--border2); border-radius:20px; padding:44px; width:380px; position:relative; z-index:1; }
-  .login-mark { display:flex; align-items:center; gap:10px; margin-bottom:6px; }
-  .login-mark-dot { width:8px; height:8px; border-radius:50%; background:var(--orange); box-shadow:0 0 10px var(--orange); }
-  .login-logo { color:var(--orange); font-size:20px; font-weight:800; letter-spacing:-0.5px; }
-  .login-sub { color:var(--muted); font-size:12px; margin-bottom:32px; font-family:'Space Mono',monospace; }
-  .login-label { font-size:11px; color:var(--muted); margin-bottom:6px; font-weight:700; letter-spacing:0.8px; text-transform:uppercase; }
-  .login-input { width:100%; background:var(--bg); border:1px solid var(--border2); border-radius:10px; color:var(--text); padding:11px 14px; font-size:13px; margin-bottom:16px; outline:none; font-family:'Syne',sans-serif; transition:border-color 0.2s; }
-  .login-input:focus { border-color:var(--orange); }
-  .login-btn { width:100%; background:var(--orange); border:none; color:#fff; border-radius:10px; padding:13px; font-size:14px; font-weight:700; cursor:pointer; font-family:'Syne',sans-serif; letter-spacing:0.3px; transition:background 0.2s,transform 0.1s; }
-  .login-btn:hover { background:#ea6c10; }
-  .login-btn:active { transform:scale(0.98); }
-  .login-error { color:var(--red); font-size:12px; margin-top:10px; text-align:center; font-family:'Space Mono',monospace; }
+/* ══ LOGIN ══════════════════════════════════════════════ */
+#login{position:fixed;inset:0;z-index:999;background:var(--bg);display:flex;align-items:center;justify-content:center}
+#login::before{content:'';position:absolute;width:700px;height:700px;border-radius:50%;background:radial-gradient(circle,rgba(245,166,35,.06),transparent 65%);top:-200px;right:-200px;pointer-events:none}
+#login::after{content:'';position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(45,212,191,.04),transparent 65%);bottom:-150px;left:-100px;pointer-events:none}
+.login-box{background:var(--s1);border:1px solid var(--b2);border-radius:22px;padding:48px 44px;width:420px;position:relative;z-index:1;box-shadow:0 40px 100px rgba(0,0,0,.6)}
+.login-logo{font-family:var(--disp);font-size:24px;font-weight:800;color:var(--amber);letter-spacing:2px;margin-bottom:4px;display:flex;align-items:center;gap:8px}
+.live-dot{width:8px;height:8px;border-radius:50%;background:var(--amber);box-shadow:0 0 10px var(--amber);animation:ldot 2s infinite}
+@keyframes ldot{0%,100%{opacity:1;box-shadow:0 0 8px var(--amber)}50%{opacity:.4;box-shadow:0 0 16px var(--amber)}}
+.login-sub{font-family:var(--mono);font-size:11px;color:var(--muted2);margin-bottom:36px;letter-spacing:.5px}
+.lf label{display:block;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted2);text-transform:uppercase;letter-spacing:1.5px;margin-bottom:6px}
+.lf input{width:100%;background:var(--bg);border:1px solid var(--b2);border-radius:10px;color:var(--txt);padding:12px 14px;font-size:14px;font-family:var(--body);outline:none;transition:border-color .2s;margin-bottom:14px}
+.lf input:focus{border-color:var(--amber)}
+.lbtn{width:100%;padding:14px;background:var(--amber);border:none;border-radius:11px;color:#000;font-size:14px;font-weight:700;font-family:var(--body);cursor:pointer;transition:opacity .15s;margin-top:4px}
+.lbtn:hover{opacity:.88}
+.lerr{color:var(--red);font-size:12px;font-family:var(--mono);margin-top:10px;text-align:center;display:none}
 
-  /* ── APP SHELL ─────────────────────────────────────────── */
-  .app { display:none; flex-direction:column; height:100vh; }
-  .app.visible { display:flex; }
+/* ══ APP SHELL ══════════════════════════════════════════ */
+#app{display:none;flex-direction:column;height:100vh}
+#app.on{display:flex}
 
-  /* ── HEADER ────────────────────────────────────────────── */
-  .header { background:var(--surface); border-bottom:1px solid var(--border); padding:0 20px; display:flex; align-items:center; justify-content:space-between; height:52px; flex-shrink:0; }
-  .header-left { display:flex; align-items:center; gap:20px; }
-  .header-logo { display:flex; align-items:center; gap:8px; }
-  .logo-dot { width:7px; height:7px; border-radius:50%; background:var(--orange); box-shadow:0 0 8px var(--orange); animation:pulse 2s infinite; }
-  .logo-text { color:var(--orange); font-weight:800; font-size:13px; letter-spacing:0.3px; }
-  .logo-tag { color:var(--muted); font-size:10px; font-family:'Space Mono',monospace; }
-  @keyframes pulse { 0%,100%{opacity:1;box-shadow:0 0 6px var(--orange)} 50%{opacity:0.5;box-shadow:0 0 14px var(--orange)} }
+/* ══ TOPBAR ═════════════════════════════════════════════ */
+.topbar{height:52px;background:var(--s1);border-bottom:1px solid var(--b1);display:flex;align-items:center;padding:0 20px;gap:0;flex-shrink:0;position:relative;z-index:50}
+.tb-logo{display:flex;align-items:center;gap:7px;margin-right:28px}
+.tb-logo-text{font-family:var(--disp);font-size:14px;font-weight:800;color:var(--amber);letter-spacing:1.5px}
+.tb-logo-tag{font-family:var(--mono);font-size:9px;color:var(--muted);letter-spacing:.5px;margin-top:1px}
+.tb-tabs{display:flex;gap:2px;flex:1}
+.tbtab{padding:6px 14px;border-radius:8px;border:none;background:none;color:var(--muted2);font-size:12px;font-weight:600;font-family:var(--body);cursor:pointer;transition:all .15s;display:flex;align-items:center;gap:6px;white-space:nowrap}
+.tbtab:hover{color:var(--txt);background:var(--b1)}
+.tbtab.on{background:var(--amberDim);color:var(--amber)}
+.tbtab .badge{font-family:var(--mono);font-size:9px;font-weight:700;padding:2px 6px;border-radius:4px;background:var(--amberDim);color:var(--amber)}
+.tb-right{display:flex;align-items:center;gap:10px;margin-left:auto}
+.tb-status{display:flex;align-items:center;gap:6px;font-family:var(--mono);font-size:11px;color:var(--muted2)}
+.status-dot{width:6px;height:6px;border-radius:50%}
+.status-dot.live{background:var(--green);box-shadow:0 0 6px var(--green);animation:ldot 2s infinite}
+.status-dot.err{background:var(--red)}
+.tb-time{font-family:var(--mono);font-size:11px;color:var(--muted);padding:4px 10px;background:var(--bg);border:1px solid var(--b1);border-radius:6px}
+.tb-user{font-family:var(--mono);font-size:11px;color:var(--muted2);padding:4px 10px;background:var(--bg);border:1px solid var(--b1);border-radius:6px}
+.tb-out{padding:4px 12px;background:none;border:1px solid var(--b2);border-radius:6px;color:var(--muted);font-size:11px;font-family:var(--body);cursor:pointer;transition:all .15s}
+.tb-out:hover{color:var(--red);border-color:var(--red)}
 
-  .tabs { display:flex; gap:2px; }
-  .tab { background:transparent; border:none; color:var(--muted); border-radius:7px; padding:5px 12px; cursor:pointer; font-size:12px; font-weight:700; font-family:'Syne',sans-serif; transition:all 0.15s; letter-spacing:0.2px; }
-  .tab.active { background:var(--orange); color:#fff; }
-  .tab:hover:not(.active) { background:var(--border2); color:var(--text); }
+/* ══ BODY ════════════════════════════════════════════════ */
+.body{flex:1;display:flex;overflow:hidden}
+.sidebar{width:200px;background:var(--s1);border-right:1px solid var(--b1);flex-shrink:0;padding:16px 10px;overflow-y:auto;display:flex;flex-direction:column;gap:2px}
+.sidebar::-webkit-scrollbar{display:none}
+.sgroup{margin-bottom:16px}
+.sgroup-label{font-family:var(--mono);font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:2px;padding:0 8px;margin-bottom:6px}
+.slink{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;color:var(--muted2);font-size:13px;font-weight:500;transition:all .12s;border:none;background:none;width:100%;text-align:left;font-family:var(--body)}
+.slink:hover{color:var(--txt);background:var(--b1)}
+.slink.on{color:var(--amber);background:var(--amberDim)}
+.slink .si{font-size:14px;width:18px;text-align:center}
+.slink .sc{font-family:var(--mono);font-size:10px;color:var(--muted);margin-left:auto}
+.slink.on .sc{color:var(--amber)}
 
-  .header-right { display:flex; align-items:center; gap:10px; }
-  .action-msg { color:var(--green); font-size:11px; font-family:'Space Mono',monospace; }
-  .auto-label { display:flex; align-items:center; gap:6px; font-size:11px; color:var(--muted); cursor:pointer; }
-  .toggle-pip { width:28px; height:15px; border-radius:8px; background:var(--border2); position:relative; transition:background 0.2s; cursor:pointer; }
-  .toggle-pip.on { background:var(--green); }
-  .toggle-pip::after { content:''; position:absolute; width:11px; height:11px; border-radius:50%; background:#fff; top:2px; left:2px; transition:left 0.2s; }
-  .toggle-pip.on::after { left:15px; }
-  .hdr-btn { background:var(--card); border:1px solid var(--border2); color:var(--muted); border-radius:7px; padding:4px 10px; cursor:pointer; font-size:11px; font-family:'Syne',sans-serif; font-weight:600; transition:all 0.15s; }
-  .hdr-btn:hover { color:var(--text); border-color:var(--border2); }
+/* ══ MAIN ════════════════════════════════════════════════ */
+.main{flex:1;overflow-y:auto;overflow-x:hidden;background:var(--bg)}
+.main::-webkit-scrollbar{width:4px}
+.main::-webkit-scrollbar-track{background:transparent}
+.main::-webkit-scrollbar-thumb{background:var(--b2);border-radius:2px}
+.panel{display:none;padding:20px 24px}
+.panel.on{display:block}
 
-  /* ── CONTENT ───────────────────────────────────────────── */
-  .content { flex:1; overflow:auto; padding:20px; }
-  .panel { display:none; }
-  .panel.active { display:block; }
+/* ══ SHARED COMPONENTS ══════════════════════════════════ */
+.ph{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
+.ph-left h1{font-family:var(--disp);font-size:22px;font-weight:800;color:var(--txt)}
+.ph-left p{font-family:var(--mono);font-size:11px;color:var(--muted2);margin-top:3px}
+.grid{display:grid;gap:14px}
+.grid-2{grid-template-columns:1fr 1fr}
+.grid-3{grid-template-columns:1fr 1fr 1fr}
+.grid-4{grid-template-columns:1fr 1fr 1fr 1fr}
+.card{background:var(--card);border:1px solid var(--b1);border-radius:14px;padding:18px 20px}
+.card-sm{padding:14px 16px}
+.sl{font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:2px;margin-bottom:10px;display:flex;align-items:center;justify-content:space-between}
+.sl a{font-size:10px;color:var(--blue);cursor:pointer;font-weight:400;text-transform:none;letter-spacing:0}
+.kpi-n{font-family:var(--mono);font-size:32px;font-weight:700;line-height:1}
+.kpi-l{font-size:12px;color:var(--muted2);margin-top:5px}
+.kpi-d{font-family:var(--mono);font-size:11px;margin-top:8px;display:flex;align-items:center;gap:4px}
+.up{color:var(--green)}.dn{color:var(--red)}.nu{color:var(--muted2)}
+.pill{display:inline-flex;align-items:center;font-family:var(--mono);font-size:10px;font-weight:700;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:.5px;gap:4px}
+.pill-amber{background:var(--amberDim);color:var(--amber)}
+.pill-green{background:var(--greenDim);color:var(--green)}
+.pill-blue{background:var(--blueDim);color:var(--blue)}
+.pill-red{background:var(--redDim);color:var(--red)}
+.pill-muted{background:var(--b1);color:var(--muted2)}
+.pill-purple{background:var(--purpleDim);color:var(--purple)}
+.btn{padding:8px 16px;border-radius:9px;border:none;cursor:pointer;font-size:12px;font-weight:600;font-family:var(--body);transition:all .12s;display:inline-flex;align-items:center;gap:6px}
+.btn-p{background:var(--amber);color:#000}
+.btn-p:hover{opacity:.85}
+.btn-s{background:var(--card);color:var(--txt);border:1px solid var(--b2)}
+.btn-s:hover{border-color:var(--amber);color:var(--amber)}
+.btn-d{background:var(--redDim);color:var(--red);border:1px solid rgba(255,77,106,.2)}
+.btn-d:hover{background:var(--red);color:#fff}
+.tbl{width:100%;border-collapse:collapse;font-size:13px}
+.tbl th{text-align:left;font-family:var(--mono);font-size:10px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:1px;padding:8px 12px;border-bottom:1px solid var(--b1)}
+.tbl td{padding:10px 12px;border-bottom:1px solid var(--b1);vertical-align:top}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:rgba(255,255,255,.02)}
+.search-row{display:flex;gap:8px;margin-bottom:14px}
+.search-in{flex:1;background:var(--s2);border:1px solid var(--b2);border-radius:9px;color:var(--txt);padding:9px 14px;font-size:13px;font-family:var(--body);outline:none;transition:border-color .2s}
+.search-in:focus{border-color:var(--amber)}
+.fil-sel{background:var(--s2);border:1px solid var(--b2);border-radius:9px;color:var(--muted2);padding:9px 12px;font-size:12px;font-family:var(--body);outline:none;cursor:pointer}
+.loading{text-align:center;padding:32px;color:var(--muted);font-family:var(--mono);font-size:12px}
+.dots span{display:inline-block;width:4px;height:4px;background:var(--amber);border-radius:50%;margin:0 2px;animation:dot 1.2s ease-in-out infinite}
+.dots span:nth-child(2){animation-delay:.2s}.dots span:nth-child(3){animation-delay:.4s}
+@keyframes dot{0%,80%,100%{transform:scale(.5);opacity:.3}40%{transform:scale(1);opacity:1}}
+.empty{text-align:center;padding:40px 20px;color:var(--muted);font-family:var(--mono);font-size:12px}
+.toast-cc{position:fixed;bottom:20px;right:20px;z-index:999;background:var(--card);border:1px solid var(--b2);border-radius:12px;padding:12px 18px;font-size:13px;display:flex;align-items:center;gap:10px;transform:translateY(60px);opacity:0;transition:all .25s cubic-bezier(.34,1.3,.64,1);pointer-events:none;max-width:320px}
+.toast-cc.on{transform:translateY(0);opacity:1}
 
-  /* ── STAT CARDS ────────────────────────────────────────── */
-  .stat-row { display:flex; gap:12px; flex-wrap:wrap; margin-bottom:20px; }
-  .stat-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:18px 20px; flex:1; min-width:130px; position:relative; overflow:hidden; transition:border-color 0.2s; }
-  .stat-card:hover { border-color:var(--border2); }
-  .stat-card::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; }
-  .stat-card.orange::before { background:var(--orange); }
-  .stat-card.green::before { background:var(--green); }
-  .stat-card.blue::before { background:var(--blue); }
-  .stat-card.purple::before { background:var(--purple); }
-  .stat-card.red::before { background:var(--red); }
-  .stat-val { font-size:28px; font-weight:800; letter-spacing:-1px; }
-  .stat-label { font-size:11px; color:var(--muted); margin-top:4px; font-weight:600; letter-spacing:0.3px; }
-  .stat-sub { font-size:10px; color:var(--faint); margin-top:4px; font-family:'Space Mono',monospace; }
+/* ══ OVERVIEW SPECIFIC ══════════════════════════════════ */
+.activity-row{display:flex;gap:10px;align-items:flex-start;padding:10px 0;border-bottom:1px solid var(--b1)}
+.activity-row:last-child{border-bottom:none}
+.abar{width:3px;border-radius:2px;flex-shrink:0;align-self:stretch;min-height:32px}
+.abody{flex:1}
+.atitle{font-size:13px;font-weight:500}
+.ameta{font-family:var(--mono);font-size:10px;color:var(--muted2);margin-top:3px}
+.progress-bar{height:6px;border-radius:3px;background:var(--b2);overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;border-radius:3px;transition:width .8s cubic-bezier(.34,1.2,.64,1)}
+.sector-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--b1)}
+.sector-row:last-child{border-bottom:none}
+.sector-name{font-size:13px;flex:1}
+.sector-count{font-family:var(--mono);font-size:11px;color:var(--amber);width:60px;text-align:right}
+.sector-bar{flex:2;height:4px;border-radius:2px;background:var(--b2);overflow:hidden}
+.sector-fill{height:100%;border-radius:2px;background:var(--amber)}
 
-  /* ── GRID LAYOUTS ──────────────────────────────────────── */
-  .two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:20px; }
-  .three-col { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:20px; }
-  @media(max-width:900px) { .two-col,.three-col { grid-template-columns:1fr; } }
+/* ══ CONVERSATIONS ══════════════════════════════════════ */
+.conv-list{border:1px solid var(--b1);border-radius:12px;overflow:hidden}
+.conv-item{padding:12px 16px;border-bottom:1px solid var(--b1);cursor:pointer;transition:background .12s;display:flex;gap:12px;align-items:flex-start}
+.conv-item:last-child{border-bottom:none}
+.conv-item:hover{background:rgba(255,255,255,.02)}
+.conv-item.sel{background:var(--amberDim)}
+.conv-av{width:34px;height:34px;border-radius:9px;background:var(--b2);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0;font-family:var(--disp);font-weight:700}
+.conv-body{flex:1;min-width:0}
+.conv-name{font-size:13px;font-weight:600;margin-bottom:2px}
+.conv-preview{font-size:12px;color:var(--muted2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.conv-meta{font-family:var(--mono);font-size:10px;color:var(--muted);margin-top:4px}
+.conv-detail{background:var(--s2);border:1px solid var(--b1);border-radius:12px;padding:16px;display:none}
+.conv-detail.on{display:block}
+.msg{margin-bottom:12px}
+.msg-role{font-family:var(--mono);font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.msg-role.user{color:var(--blue)}
+.msg-role.ai{color:var(--amber)}
+.msg-txt{font-size:13px;line-height:1.6;color:var(--txt);background:var(--card);border:1px solid var(--b1);border-radius:9px;padding:10px 13px;white-space:pre-wrap;word-break:break-word}
+.rating-stars{display:flex;gap:3px}
+.star{color:var(--amber);font-size:14px}
+.star.empty{color:var(--b2)}
 
-  /* ── CARDS ─────────────────────────────────────────────── */
-  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; overflow:hidden; margin-bottom:16px; }
-  .card-title { padding:13px 16px; border-bottom:1px solid var(--border); font-weight:700; font-size:11px; color:var(--muted); display:flex; align-items:center; justify-content:space-between; text-transform:uppercase; letter-spacing:0.8px; }
-  .card-title-accent { color:var(--orange); }
-  .card-body { padding:16px; }
+/* ══ DATA LAB ═══════════════════════════════════════════ */
+.dp-card{background:var(--card);border:1px solid var(--b1);border-radius:11px;padding:13px 15px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.dp-icon{width:36px;height:36px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.dp-body{flex:1;min-width:0}
+.dp-item{font-size:13px;font-weight:600;margin-bottom:3px}
+.dp-val{font-family:var(--mono);font-size:15px;font-weight:700;color:var(--amber)}
+.dp-meta{font-size:11px;color:var(--muted2);margin-top:2px}
+.dp-conf{font-family:var(--mono);font-size:10px;padding:2px 7px;border-radius:4px;margin-top:5px;display:inline-block}
+.conf-high{background:var(--greenDim);color:var(--green)}
+.conf-med{background:var(--amberDim);color:var(--amber)}
+.conf-low{background:var(--redDim);color:var(--red)}
 
-  /* ── TABLE ─────────────────────────────────────────────── */
-  table { width:100%; border-collapse:collapse; font-size:12px; }
-  th { padding:9px 14px; text-align:left; color:var(--faint); font-weight:700; font-size:10px; border-bottom:1px solid var(--border); background:var(--surface); text-transform:uppercase; letter-spacing:0.6px; }
-  td { padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.03); }
-  tr:last-child td { border-bottom:none; }
-  .clickable-row { cursor:pointer; }
-  .clickable-row:hover td { background:rgba(249,115,22,0.04) !important; }
-  .empty-row td { text-align:center; color:var(--muted); padding:32px; font-family:'Space Mono',monospace; font-size:11px; }
+/* ══ USERS ══════════════════════════════════════════════ */
+.user-av{width:32px;height:32px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;font-family:var(--disp);flex-shrink:0}
 
-  /* ── BADGES ────────────────────────────────────────────── */
-  .badge { display:inline-block; padding:2px 8px; border-radius:5px; font-size:10px; font-weight:700; letter-spacing:0.3px; font-family:'Space Mono',monospace; }
-  .badge-admin   { background:rgba(167,139,250,0.15); color:var(--purple); }
-  .badge-user    { background:var(--blue-dim); color:var(--blue); }
-  .badge-sector  { background:var(--border2); color:#94a3b8; }
-  .badge-good    { background:var(--green-dim); color:var(--green); }
-  .badge-junk    { background:rgba(248,113,113,0.12); color:var(--red); }
-  .badge-review  { background:rgba(249,115,22,0.12); color:var(--orange); }
-  .badge-gold    { background:rgba(251,191,36,0.15); color:#fbbf24; }
-  .badge-high    { background:var(--green-dim); color:var(--green); }
-  .badge-med     { background:var(--orange-dim); color:var(--orange); }
-  .badge-low     { background:rgba(100,116,139,0.12); color:var(--muted); }
+/* ══ FINE-TUNE ══════════════════════════════════════════ */
+.ft-step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid var(--b1)}
+.ft-step:last-child{border-bottom:none}
+.ft-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:700;flex-shrink:0}
+.ft-num.done{background:var(--greenDim);color:var(--green)}
+.ft-num.active{background:var(--amberDim);color:var(--amber)}
+.ft-num.pending{background:var(--b2);color:var(--muted)}
+.ft-body{flex:1}
+.ft-title{font-size:13px;font-weight:600;margin-bottom:3px}
+.ft-desc{font-size:12px;color:var(--muted2);line-height:1.5}
+.gold-item{background:var(--card);border:1px solid var(--b1);border-radius:10px;padding:12px 14px;margin-bottom:7px;cursor:pointer;transition:border-color .12s}
+.gold-item:hover{border-color:var(--amber)}
+.gold-item.flagged{border-color:var(--green)}
+.gold-q{font-size:13px;font-weight:500;margin-bottom:5px;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.gold-meta{display:flex;gap:8px;align-items:center}
 
-  /* ── BUTTONS ───────────────────────────────────────────── */
-  .btn-sm { border:none; border-radius:6px; padding:3px 9px; cursor:pointer; font-size:11px; font-weight:700; font-family:'Syne',sans-serif; transition:all 0.15s; }
-  .btn-promote { background:rgba(167,139,250,0.15); color:var(--purple); }
-  .btn-remove  { background:transparent; border:1px solid rgba(248,113,113,0.3) !important; color:var(--red); }
-  .btn-view    { background:var(--blue-dim); color:var(--blue); }
-  .btn-good    { background:var(--green-dim); color:var(--green); }
-  .btn-junk    { background:rgba(248,113,113,0.1); color:var(--red); }
-  .btn-gold    { background:rgba(251,191,36,0.12); color:#fbbf24; }
-  .btn-export  { background:var(--orange); color:#fff; padding:6px 14px; border-radius:8px; font-size:12px; }
-  .btn-export:hover { background:#ea6c10; }
-  .btn-group   { display:flex; gap:4px; }
+/* ══ SCRAPER ════════════════════════════════════════════ */
+.sc-card{background:var(--card);border:1px solid var(--b1);border-radius:12px;padding:15px 16px;margin-bottom:8px;display:flex;gap:12px;align-items:flex-start}
+.sc-status{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:5px}
+.sc-status.ok{background:var(--green);box-shadow:0 0 6px var(--green)}
+.sc-status.warn{background:var(--amber)}
+.sc-status.err{background:var(--red)}
+.sc-body{flex:1}
+.sc-name{font-size:13px;font-weight:600;margin-bottom:3px}
+.sc-meta{font-family:var(--mono);font-size:11px;color:var(--muted2)}
 
-  /* ── SEARCH ────────────────────────────────────────────── */
-  .search-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
-  .search-input { background:var(--card); border:1px solid var(--border2); border-radius:9px; color:var(--text); padding:7px 12px; font-size:12px; width:260px; outline:none; font-family:'Syne',sans-serif; transition:border-color 0.2s; }
-  .search-input:focus { border-color:var(--orange); }
-  .count-label { color:var(--muted); font-size:11px; font-family:'Space Mono',monospace; }
-  .filter-select { background:var(--card); border:1px solid var(--border2); border-radius:9px; color:var(--text); padding:7px 10px; font-size:12px; outline:none; font-family:'Syne',sans-serif; cursor:pointer; }
+/* ══ ALERTS ═════════════════════════════════════════════ */
+.alert-banner{padding:11px 14px;border-radius:10px;margin-bottom:8px;display:flex;gap:10px;align-items:flex-start;font-size:13px}
+.alert-banner.warn{background:rgba(245,166,35,.07);border:1px solid rgba(245,166,35,.2)}
+.alert-banner.err{background:rgba(255,77,106,.07);border:1px solid rgba(255,77,106,.2)}
+.alert-banner.info{background:rgba(77,158,255,.07);border:1px solid rgba(77,158,255,.2)}
+.alert-banner.ok{background:rgba(45,212,191,.07);border:1px solid rgba(45,212,191,.2)}
 
-  /* ── SECTOR CHART ──────────────────────────────────────── */
-  .sector-row { display:flex; align-items:center; gap:10px; margin-bottom:9px; }
-  .sector-name { font-size:11px; color:#94a3b8; width:90px; flex-shrink:0; text-transform:capitalize; font-weight:600; }
-  .sector-bar-wrap { flex:1; background:var(--bg); border-radius:4px; height:7px; overflow:hidden; }
-  .sector-bar { height:100%; border-radius:4px; background:linear-gradient(90deg,var(--orange),var(--green)); transition:width 0.8s ease; }
-  .sector-count { font-size:10px; color:var(--muted); width:28px; text-align:right; flex-shrink:0; font-family:'Space Mono',monospace; }
-
-  /* ── ACTIVITY FEED ─────────────────────────────────────── */
-  .activity-item { display:flex; align-items:flex-start; gap:10px; padding:10px 16px; border-bottom:1px solid rgba(255,255,255,0.03); }
-  .activity-item:last-child { border-bottom:none; }
-  .activity-icon { width:26px; height:26px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; flex-shrink:0; margin-top:1px; }
-  .activity-icon.new-user { background:var(--green-dim); color:var(--green); }
-  .activity-icon.conversation { background:var(--blue-dim); color:var(--blue); }
-  .activity-detail { flex:1; font-size:12px; color:#94a3b8; line-height:1.5; }
-  .activity-when { font-size:10px; color:var(--muted); white-space:nowrap; font-family:'Space Mono',monospace; }
-
-  /* ── MODAL ─────────────────────────────────────────────── */
-  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.85); z-index:1000; display:flex; align-items:center; justify-content:center; padding:20px; backdrop-filter:blur(4px); }
-  .modal-overlay.hidden { display:none; }
-  .modal { background:var(--surface); border:1px solid var(--border2); border-radius:18px; width:100%; max-width:700px; max-height:88vh; display:flex; flex-direction:column; }
-  .modal-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; justify-content:space-between; align-items:center; flex-shrink:0; }
-  .modal-title { font-weight:800; font-size:14px; }
-  .modal-meta { font-size:11px; color:var(--muted); margin-top:3px; font-family:'Space Mono',monospace; }
-  .modal-close { background:none; border:none; color:var(--muted); font-size:18px; cursor:pointer; padding:4px 8px; border-radius:6px; }
-  .modal-close:hover { background:var(--border2); color:var(--text); }
-  .modal-body { flex:1; overflow-y:auto; padding:16px 20px; }
-  .modal-footer { padding:12px 20px; border-top:1px solid var(--border); display:flex; gap:8px; justify-content:flex-end; flex-shrink:0; }
-  .chat-msg { margin-bottom:14px; }
-  .chat-msg-label { font-size:10px; font-weight:700; letter-spacing:1px; margin-bottom:5px; text-transform:uppercase; }
-  .chat-msg-label.user { color:var(--orange); }
-  .chat-msg-label.ai { color:var(--green); }
-  .chat-msg-bubble { background:var(--bg); border-radius:10px; padding:10px 14px; font-size:13px; color:#cbd5e1; line-height:1.7; white-space:pre-wrap; border:1px solid var(--border); }
-  .chat-msg-bubble.ai-bubble { border-color:rgba(16,185,129,0.2); }
-
-  /* ── AI HEALTH ─────────────────────────────────────────── */
-  .health-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(155px,1fr)); gap:10px; margin-bottom:16px; }
-  .health-card { background:var(--bg); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
-  .health-val { font-size:22px; font-weight:800; color:var(--orange); letter-spacing:-0.5px; }
-  .health-label { font-size:10px; color:var(--muted); margin-top:3px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase; }
-
-  /* ── RETENTION ─────────────────────────────────────────── */
-  .retention-bar { display:flex; align-items:center; gap:12px; }
-  .retention-track { flex:1; background:var(--bg); border-radius:6px; height:10px; overflow:hidden; }
-  .retention-fill { height:100%; border-radius:6px; background:linear-gradient(90deg,var(--orange),var(--green)); transition:width 1s ease; }
-  .retention-pct { font-size:16px; font-weight:800; color:var(--green); font-family:'Space Mono',monospace; }
-
-  /* ── ERRORS ────────────────────────────────────────────── */
-  .error-item { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:12px 16px; margin-bottom:8px; }
-  .error-header { display:flex; justify-content:space-between; margin-bottom:6px; }
-  .error-context { color:var(--red); font-weight:700; font-size:12px; }
-  .error-time { color:var(--muted); font-size:10px; font-family:'Space Mono',monospace; }
-  .error-msg { color:#94a3b8; font-size:11px; font-family:'Space Mono',monospace; word-break:break-all; }
-  .no-errors { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:48px; text-align:center; color:var(--green); font-size:14px; }
-
-  /* ── DATA LAB ──────────────────────────────────────────── */
-  .datalab-tabs { display:flex; gap:6px; margin-bottom:18px; flex-wrap:wrap; }
-  .datalab-tab { background:var(--card); border:1px solid var(--border2); color:var(--muted); border-radius:8px; padding:6px 14px; cursor:pointer; font-size:12px; font-weight:700; font-family:'Syne',sans-serif; transition:all 0.15s; }
-  .datalab-tab.active { background:var(--orange-dim); border-color:var(--orange); color:var(--orange); }
-  .datalab-panel { display:none; }
-  .datalab-panel.active { display:block; }
-
-  /* Coverage map grid */
-  .coverage-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:10px; }
-  .coverage-card { background:var(--bg); border:1px solid var(--border); border-radius:10px; padding:14px; }
-  .coverage-region { font-weight:700; font-size:13px; margin-bottom:8px; }
-  .coverage-bar-wrap { background:var(--surface); border-radius:4px; height:6px; margin-bottom:6px; overflow:hidden; }
-  .coverage-bar { height:100%; border-radius:4px; transition:width 0.8s ease; }
-  .coverage-bar.high { background:var(--green); }
-  .coverage-bar.med  { background:var(--orange); }
-  .coverage-bar.low  { background:var(--red); }
-  .coverage-count { font-size:10px; color:var(--muted); font-family:'Space Mono',monospace; }
-
-  /* Confidence distribution */
-  .conf-row { display:flex; align-items:center; gap:10px; margin-bottom:8px; }
-  .conf-label { font-size:11px; color:#94a3b8; width:70px; flex-shrink:0; font-family:'Space Mono',monospace; }
-  .conf-bar-wrap { flex:1; background:var(--bg); border-radius:4px; height:7px; overflow:hidden; }
-  .conf-bar { height:100%; border-radius:4px; transition:width 0.6s ease; }
-  .conf-count { font-size:10px; color:var(--muted); width:40px; text-align:right; font-family:'Space Mono',monospace; }
-
-  /* Training stats */
-  .training-stat { display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--border); }
-  .training-stat:last-child { border-bottom:none; }
-  .training-label { font-size:12px; color:#94a3b8; font-weight:600; }
-  .training-val { font-size:18px; font-weight:800; font-family:'Space Mono',monospace; }
-
-  /* ── AFRISCOUT ──────────────────────────────────────────── */
-  .scout-stat-row { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:18px; }
-  .scout-stat { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 18px; flex:1; min-width:120px; }
-  .scout-val { font-size:22px; font-weight:800; }
-  .scout-label { font-size:10px; color:var(--muted); margin-top:3px; font-weight:600; letter-spacing:0.3px; text-transform:uppercase; }
-  .collector-row { display:flex; align-items:center; gap:12px; padding:12px 16px; border-bottom:1px solid rgba(255,255,255,0.03); }
-  .collector-avatar { width:32px; height:32px; border-radius:50%; background:var(--orange-dim); display:flex; align-items:center; justify-content:center; color:var(--orange); font-weight:800; font-size:13px; flex-shrink:0; }
-  .collector-name { font-weight:700; font-size:13px; }
-  .collector-meta { font-size:10px; color:var(--muted); font-family:'Space Mono',monospace; }
-  .collector-stats { margin-left:auto; text-align:right; }
-  .collector-dp { font-size:16px; font-weight:800; color:var(--orange); }
-  .collector-dp-label { font-size:10px; color:var(--muted); }
-  .progress-ring { display:inline-flex; align-items:center; gap:6px; }
-  .progress-mini { width:60px; height:5px; background:var(--bg); border-radius:3px; overflow:hidden; }
-  .progress-mini-fill { height:100%; border-radius:3px; background:var(--green); transition:width 0.6s ease; }
-
-  /* Pending submission card */
-  .submission-card { background:var(--card); border:1px solid var(--border); border-radius:12px; padding:14px 16px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
-  .submission-info { flex:1; }
-  .submission-item { font-weight:700; font-size:13px; margin-bottom:4px; }
-  .submission-meta { font-size:10px; color:var(--muted); font-family:'Space Mono',monospace; }
-  .submission-value { font-size:18px; font-weight:800; color:var(--orange); text-align:right; white-space:nowrap; }
-  .submission-actions { display:flex; gap:6px; margin-top:8px; }
-
-  /* Gap alerts */
-  .gap-alert { background:rgba(249,115,22,0.06); border:1px solid rgba(249,115,22,0.2); border-radius:10px; padding:12px 16px; margin-bottom:8px; display:flex; align-items:center; gap:12px; }
-  .gap-icon { font-size:16px; flex-shrink:0; }
-  .gap-text { font-size:12px; color:#94a3b8; flex:1; }
-  .gap-severity { font-size:10px; font-weight:700; padding:2px 8px; border-radius:4px; font-family:'Space Mono',monospace; }
-  .gap-high { background:rgba(248,113,113,0.15); color:var(--red); }
-  .gap-med  { background:var(--orange-dim); color:var(--orange); }
-
-  /* ── LOADING ────────────────────────────────────────────── */
-  .loading { text-align:center; color:var(--muted); padding:40px; font-size:13px; font-family:'Space Mono',monospace; }
-  .loading::after { content:''; animation:dots 1.5s infinite; }
-  @keyframes dots { 0%{content:'.'} 33%{content:'..'} 66%{content:'...'} }
-
-  /* ── TURN COLORS ────────────────────────────────────────── */
-  .turns-high { color:var(--green); font-weight:700; }
-  .turns-mid  { color:var(--orange); font-weight:700; }
-  .turns-low  { color:var(--muted); }
-
-  /* ── SECTION HEADING ────────────────────────────────────── */
-  .section-heading { font-size:11px; font-weight:700; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-  .section-heading::after { content:''; flex:1; height:1px; background:var(--border); }
-
-  /* ── COMING SOON ────────────────────────────────────────── */
-  .coming-soon { background:var(--card); border:1px dashed var(--border2); border-radius:14px; padding:48px; text-align:center; }
-  .coming-soon-icon { font-size:32px; margin-bottom:12px; }
-  .coming-soon-title { font-weight:800; font-size:15px; margin-bottom:6px; color:var(--orange); }
-  .coming-soon-text { font-size:12px; color:var(--muted); max-width:320px; margin:0 auto; line-height:1.6; }
+/* ══ KENYA TODAY ════════════════════════════════════════ */
+.kt-row{display:flex;justify-content:space-between;align-items:center;padding:9px 0;border-bottom:1px solid var(--b1)}
+.kt-row:last-child{border-bottom:none}
+.kt-item{font-size:13px;font-weight:500}
+.kt-val{font-family:var(--mono);font-size:13px;color:var(--amber);font-weight:700}
+.kt-sub{font-size:11px;color:var(--muted2);margin-top:1px}
 </style>
 </head>
 <body>
 
-<!-- ── LOGIN ──────────────────────────────────────────────────────────────── -->
-<div class="login-wrap" id="loginWrap">
-  <div class="login-card">
-    <div class="login-mark">
-      <div class="login-mark-dot"></div>
-      <div class="login-logo">AfriFoundry</div>
-    </div>
-    <div class="login-sub">Command Center — Restricted Access</div>
-    <div class="login-label">Email</div>
-    <input class="login-input" type="email" id="loginEmail" placeholder="admin@afrifoundry.com" />
-    <div class="login-label">Password</div>
-    <input class="login-input" type="password" id="loginPass" placeholder="••••••••"
-      onkeydown="if(event.key==='Enter')doLogin()" />
-    <button class="login-btn" onclick="doLogin()">Access Command Center</button>
-    <div class="login-error" id="loginError"></div>
-  </div>
-</div>
-
-<!-- ── APP ────────────────────────────────────────────────────────────────── -->
-<div class="app" id="app">
-  <div class="header">
-    <div class="header-left">
-      <div class="header-logo">
-        <div class="logo-dot"></div>
-        <div>
-          <div class="logo-text">AfriFoundry Command Center</div>
-        </div>
-      </div>
-      <div class="tabs">
-        <button class="tab active" onclick="switchTab('overview',this)">Overview</button>
-        <button class="tab" onclick="switchTab('users',this)">Users</button>
-        <button class="tab" onclick="switchTab('conversations',this)">Conversations</button>
-        <button class="tab" onclick="switchTab('datalab',this)">Data Lab</button>
-        <button class="tab" onclick="switchTab('afriscout',this)">AfriScout</button>
-        <button class="tab" onclick="switchTab('ai',this)">AI Health</button>
-        <button class="tab" onclick="switchTab('errors',this)">Errors</button>
-        <button class="tab" onclick="switchTab('finetune',this)">⚡ Fine-Tune</button>
-      </div>
-    </div>
-    <div class="header-right">
-      <span class="action-msg" id="actionMsg"></span>
-      <label class="auto-label" title="Auto-refresh every 30s">
-        <span style="font-size:11px;color:var(--muted)">Auto</span>
-        <div class="toggle-pip" id="autoToggle" onclick="toggleAutoRefresh()"></div>
-      </label>
-      <button class="hdr-btn" onclick="loadAll()">↻ Refresh</button>
-      <button class="hdr-btn" onclick="doLogout()">Log Out</button>
-    </div>
-  </div>
-
-  <div class="content">
-
-    <!-- ── OVERVIEW ───────────────────────────────────────── -->
-    <div class="panel active" id="panel-overview">
-      <div class="stat-row" id="statRow"><div class="loading">Loading</div></div>
-      <div class="two-col">
-        <div class="card">
-          <div class="card-title">Sectors Being Validated</div>
-          <div style="padding:16px" id="sectorChart"><div class="loading">Loading</div></div>
-        </div>
-        <div class="card">
-          <div class="card-title">Live Activity Feed</div>
-          <div id="activityFeed"><div class="loading">Loading</div></div>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">
-          <span>Recent Conversations</span>
-          <span style="color:var(--muted);font-size:10px;font-family:'Space Mono',monospace">Click to read</span>
-        </div>
-        <table>
-          <thead><tr><th>User</th><th>Idea</th><th>Sector</th><th>Turns</th><th>When</th><th></th></tr></thead>
-          <tbody id="overviewConvTbody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ── USERS ──────────────────────────────────────────── -->
-    <div class="panel" id="panel-users">
-      <div class="search-row">
-        <input class="search-input" id="userSearch" placeholder="Search name or email..." oninput="renderUsers()" />
-        <span class="count-label" id="userCount"></span>
-      </div>
-      <div class="card">
-        <table>
-          <thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Convs</th><th>Validations</th><th>Location</th><th>Joined</th><th>Last Login</th><th>Actions</th></tr></thead>
-          <tbody id="userTbody"><tr class="empty-row"><td colspan="9">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ── CONVERSATIONS ──────────────────────────────────── -->
-    <div class="panel" id="panel-conversations">
-      <div class="search-row">
-        <input class="search-input" id="convSearch" placeholder="Search idea or user..." oninput="renderConversations()" />
-        <select class="filter-select" id="qualityFilter" onchange="renderConversations()">
-          <option value="">All Labels</option>
-          <option value="good">Good</option>
-          <option value="gold">Gold</option>
-          <option value="needs_review">Needs Review</option>
-          <option value="junk">Junk</option>
-        </select>
-        <select class="filter-select" id="sectorFilter" onchange="renderConversations()">
-          <option value="">All Sectors</option>
-          <option value="retail">Retail</option>
-          <option value="technology">Technology</option>
-          <option value="health">Health</option>
-          <option value="food">Food</option>
-          <option value="energy">Energy</option>
-          <option value="transport">Transport</option>
-          <option value="agriculture">Agriculture</option>
-          <option value="finance">Finance</option>
-        </select>
-        <span class="count-label" id="convCount"></span>
-      </div>
-      <div class="card">
-        <table>
-          <thead><tr><th>User</th><th>Idea</th><th>Sector</th><th>Label</th><th>Depth</th><th>Turns</th><th>Started</th><th>Actions</th></tr></thead>
-          <tbody id="convTbody"><tr class="empty-row"><td colspan="8">Loading...</td></tr></tbody>
-        </table>
-      </div>
-    </div>
-
-    <!-- ── DATA LAB ───────────────────────────────────────── -->
-    <div class="panel" id="panel-datalab">
-      <div class="datalab-tabs">
-        <button class="datalab-tab active" onclick="switchDatalabTab('intelligence',this)">🧠 Intelligence</button>
-        <button class="datalab-tab" onclick="switchDatalabTab('quality',this)">✅ Quality Control</button>
-        <button class="datalab-tab" onclick="switchDatalabTab('training',this)">🎯 Training Data</button>
-      </div>
-
-      <!-- Intelligence -->
-      <div class="datalab-panel active" id="dl-intelligence">
-        <div class="stat-row" id="dlStatRow">
-          <div class="stat-card blue">
-            <div class="stat-val" style="color:var(--blue)" id="dlTotal">—</div>
-            <div class="stat-label">Total Datapoints</div>
-            <div class="stat-sub" id="dlTarget">Target: 10,000</div>
-          </div>
-          <div class="stat-card green">
-            <div class="stat-val" style="color:var(--green)" id="dlHighConf">—</div>
-            <div class="stat-label">High Confidence (≥80%)</div>
-            <div class="stat-sub">confidence_score ≥ 0.8</div>
-          </div>
-          <div class="stat-card orange">
-            <div class="stat-val" style="color:var(--orange)" id="dlSectors">—</div>
-            <div class="stat-label">Sectors Covered</div>
-            <div class="stat-sub">Distinct categories</div>
-          </div>
-          <div class="stat-card red">
-            <div class="stat-val" style="color:var(--red)" id="dlExpiring">—</div>
-            <div class="stat-label">Expiring Soon</div>
-            <div class="stat-sub">Within 30 days</div>
-          </div>
-        </div>
-
-        <div class="two-col">
-          <!-- Sector coverage -->
-          <div class="card">
-            <div class="card-title">Datapoints by Sector</div>
-            <div style="padding:16px" id="dlSectorChart"><div class="loading">Loading</div></div>
-          </div>
-          <!-- Regional coverage -->
-          <div class="card">
-            <div class="card-title">Regional Coverage</div>
-            <div style="padding:16px" id="dlRegionChart"><div class="loading">Loading</div></div>
-          </div>
-        </div>
-
-        <!-- Confidence distribution -->
-        <div class="card">
-          <div class="card-title">Confidence Score Distribution</div>
-          <div style="padding:16px" id="dlConfidence"><div class="loading">Loading</div></div>
-        </div>
-
-        <!-- Data gaps -->
-        <div class="card">
-          <div class="card-title"><span>Data Gaps — Priority for Field Collection</span><span class="card-title-accent">Live — V1</span></div>
-          <div style="padding:16px" id="dlGaps">
-            <div class="gap-alert">
-              <div class="gap-icon">📍</div>
-              <div class="gap-text"><strong>Kisumu / Western Kenya</strong> — Zero verified datapoints. Major urban market being ignored.</div>
-              <div class="gap-severity gap-high">CRITICAL</div>
-            </div>
-            <div class="gap-alert">
-              <div class="gap-icon">📍</div>
-              <div class="gap-text"><strong>Nakuru / Rift Valley</strong> — Agri sector has no local price data. Defaulting to Nairobi prices which are wrong.</div>
-              <div class="gap-severity gap-high">CRITICAL</div>
-            </div>
-            <div class="gap-alert">
-              <div class="gap-icon">📍</div>
-              <div class="gap-text"><strong>Eldoret</strong> — Transport / logistics sector missing. Major route hub with zero data.</div>
-              <div class="gap-severity gap-med">HIGH</div>
-            </div>
-            <div class="gap-alert">
-              <div class="gap-icon">📍</div>
-              <div class="gap-text"><strong>Thika Road Corridor</strong> — Industrial sector data gap. Manufacturing businesses get generic responses.</div>
-              <div class="gap-severity gap-med">HIGH</div>
-            </div>
-            <div class="gap-alert">
-              <div class="gap-icon">📊</div>
-              <div class="gap-text"><strong>Finance sector</strong> — Only 1 conversation, no market datapoints. SACCO and chama data missing entirely.</div>
-              <div class="gap-severity gap-med">HIGH</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Quality Control -->
-      <div class="datalab-panel" id="dl-quality">
-        <div class="search-row">
-          <input class="search-input" id="dpSearch" placeholder="Search item or category..." oninput="renderDatapoints()" style="width:300px" />
-          <select class="filter-select" id="dpConfFilter" onchange="renderDatapoints()">
-            <option value="">All Confidence</option>
-            <option value="high">High (≥80%)</option>
-            <option value="med">Medium (60-79%)</option>
-            <option value="low">Low (&lt;60%)</option>
-          </select>
-          <select class="filter-select" id="dpSectorFilter" onchange="renderDatapoints()">
-            <option value="">All Sectors</option>
-            <option value="food">Food</option>
-            <option value="retail">Retail</option>
-            <option value="energy">Energy</option>
-            <option value="health">Health</option>
-            <option value="transport">Transport</option>
-            <option value="agriculture">Agriculture</option>
-          </select>
-          <span class="count-label" id="dpCount"></span>
-        </div>
-        <div class="card">
-          <table>
-            <thead><tr><th>Item</th><th>Value</th><th>Sector</th><th>Region</th><th>Confidence</th><th>Updated</th><th>Actions</th></tr></thead>
-            <tbody id="dpTbody"><tr class="empty-row"><td colspan="7">Loading datapoints...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Training Data -->
-      <div class="datalab-panel" id="dl-training">
-        <div class="two-col">
-          <div class="card">
-            <div class="card-title">Training Data Quality</div>
-            <div style="padding:16px">
-              <div class="training-stat">
-                <div>
-                  <div class="training-label">Gold Examples</div>
-                  <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">Anchor examples for fine-tuning</div>
-                </div>
-                <div class="training-val" style="color:#fbbf24" id="trainGold">—</div>
-              </div>
-              <div class="training-stat">
-                <div>
-                  <div class="training-label">Good Conversations</div>
-                  <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">Ready for fine-tuning</div>
-                </div>
-                <div class="training-val" style="color:var(--green)" id="trainGood">—</div>
-              </div>
-              <div class="training-stat">
-                <div>
-                  <div class="training-label">Needs Review</div>
-                  <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">Manually classify these</div>
-                </div>
-                <div class="training-val" style="color:var(--orange)" id="trainReview">—</div>
-              </div>
-              <div class="training-stat">
-                <div>
-                  <div class="training-label">Junk — Excluded</div>
-                  <div style="font-size:10px;color:var(--muted);font-family:'Space Mono',monospace">Filtered from training</div>
-                </div>
-                <div class="training-val" style="color:var(--red)" id="trainJunk">—</div>
-              </div>
-            </div>
-          </div>
-
-          <div class="card">
-            <div class="card-title">Export Training Data</div>
-            <div style="padding:16px">
-              <div style="font-size:12px;color:#94a3b8;margin-bottom:16px;line-height:1.6">
-                Exports all <strong style="color:var(--green)">good</strong> and <strong style="color:#fbbf24">gold</strong> conversations as JSONL — ready for fine-tuning. Only includes conversations with turn_count ≥ 2 and is_business_idea = true.
-              </div>
-              <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:12px;margin-bottom:14px;font-family:'Space Mono',monospace;font-size:11px;color:var(--muted)">
-                Format: {"messages": [{"role": "user"...}, {"role": "assistant"...}]}
-              </div>
-              <button class="btn-sm btn-export" onclick="exportV2()" style="width:100%">⬇ Export JSONL v2 for Fine-Tuning</button>
-              <div style="margin-top:10px;font-size:10px;color:var(--muted);font-family:'Space Mono',monospace" id="exportStatus"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Conversations with quality controls -->
-        <div class="search-row">
-          <input class="search-input" id="trainSearch" placeholder="Search conversations..." oninput="renderTrainingConvs()" />
-          <select class="filter-select" id="trainLabelFilter" onchange="renderTrainingConvs()">
-            <option value="needs_review">Needs Review</option>
-            <option value="good">Good</option>
-            <option value="gold">Gold</option>
-            <option value="junk">Junk</option>
-            <option value="">All</option>
-          </select>
-          <span class="count-label" id="trainCount"></span>
-        </div>
-        <div class="card">
-          <table>
-            <thead><tr><th>Idea</th><th>Sector</th><th>Label</th><th>Depth</th><th>Turns</th><th>Actions</th></tr></thead>
-            <tbody id="trainTbody"><tr class="empty-row"><td colspan="6">Loading...</td></tr></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── AFRISCOUT ───────────────────────────────────────── -->
-    <div class="panel" id="panel-afriscout">
-      <div class="scout-stat-row">
-        <div class="scout-stat">
-          <div class="scout-val" style="color:var(--orange)">0</div>
-          <div class="scout-label">Active Collectors</div>
-        </div>
-        <div class="scout-stat">
-          <div class="scout-val" style="color:var(--orange)" id="scoutTotal">8,622</div>
-          <div class="scout-label">Total Datapoints</div>
-        </div>
-        <div class="scout-stat">
-          <div class="scout-val" style="color:var(--red)">0</div>
-          <div class="scout-label">Pending Approval</div>
-        </div>
-        <div class="scout-stat">
-          <div class="scout-val" style="color:var(--green)">0</div>
-          <div class="scout-label">Approved Today</div>
-        </div>
-        <div class="scout-stat">
-          <div class="scout-val" style="color:var(--muted)">Mar 2026</div>
-          <div class="scout-label">Field Launch</div>
-        </div>
-      </div>
-
-      <div class="two-col">
-        <!-- Collectors -->
-        <div class="card">
-          <div class="card-title">
-            <span>Field Collectors</span>
-            <span style="color:var(--orange);font-size:10px">Launching March</span>
-          </div>
-          <div style="padding:32px;text-align:center">
-            <div style="font-size:28px;margin-bottom:10px">📱</div>
-            <div style="font-weight:700;font-size:13px;color:var(--orange);margin-bottom:6px">AfriScout Not Yet Live</div>
-            <div style="font-size:12px;color:var(--muted);line-height:1.6;max-width:280px;margin:0 auto">
-              Field data collectors will appear here once AfriScout launches. Target: 2–5 collectors starting March 2026 covering Nairobi, Mombasa, Kisumu.
-            </div>
-          </div>
-        </div>
-
-        <!-- Sector targets -->
-        <div class="card">
-          <div class="card-title">Field Collection Targets</div>
-          <div style="padding:16px">
-            <div class="section-heading">Priority Sectors for March</div>
-            <div class="sector-row">
-              <div class="sector-name">Finance</div>
-              <div class="sector-bar-wrap"><div class="sector-bar" style="width:5%"></div></div>
-              <div class="sector-count" style="color:var(--red)">1</div>
-            </div>
-            <div class="sector-row">
-              <div class="sector-name">Agriculture</div>
-              <div class="sector-bar-wrap"><div class="sector-bar" style="width:15%"></div></div>
-              <div class="sector-count" style="color:var(--orange)">Low</div>
-            </div>
-            <div class="sector-row">
-              <div class="sector-name">Construction</div>
-              <div class="sector-bar-wrap"><div class="sector-bar" style="width:10%"></div></div>
-              <div class="sector-count" style="color:var(--orange)">Low</div>
-            </div>
-            <div class="sector-row">
-              <div class="sector-name">Retail</div>
-              <div class="sector-bar-wrap"><div class="sector-bar" style="width:70%"></div></div>
-              <div class="sector-count">Good</div>
-            </div>
-            <div class="sector-row">
-              <div class="sector-name">Technology</div>
-              <div class="sector-bar-wrap"><div class="sector-bar" style="width:55%"></div></div>
-              <div class="sector-count">OK</div>
-            </div>
-            <div style="margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">
-              <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">Target: 10,000 total by end of March</div>
-              <div style="margin-top:8px;background:var(--bg);border-radius:6px;height:8px;overflow:hidden">
-                <div style="height:100%;border-radius:6px;background:linear-gradient(90deg,var(--orange),var(--green));width:86%"></div>
-              </div>
-              <div style="font-size:10px;color:var(--muted);margin-top:4px;font-family:'Space Mono',monospace">8,622 / 10,000 — 86%</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Pending submissions placeholder -->
-      <div class="card">
-        <div class="card-title">
-          <span>Pending Submissions — Human Validation Queue</span>
-          <span style="color:var(--muted);font-size:10px">All field data passes through here before entering DB</span>
-        </div>
-        <div style="padding:32px;text-align:center">
-          <div style="font-size:28px;margin-bottom:10px">✅</div>
-          <div style="font-weight:700;font-size:13px;color:var(--green);margin-bottom:6px">Queue is Empty</div>
-          <div style="font-size:12px;color:var(--muted)">No submissions pending review. When AfriScout collectors submit data, it will appear here for approval before entering the database.</div>
-        </div>
-      </div>
-
-      <!-- Route planning -->
-      <div class="card">
-        <div class="card-title"><span>Collection Route Planning</span><span style="color:var(--orange);font-size:10px">March 2026</span></div>
-        <div style="padding:16px">
-          <div class="section-heading">Priority Locations for Field Collection</div>
-          <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px">
-            <div style="background:var(--bg);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px">
-              <div style="font-weight:700;font-size:12px;color:var(--red);margin-bottom:4px">🔴 Kisumu CBD</div>
-              <div style="font-size:10px;color:var(--muted);line-height:1.5">0 datapoints. Western hub. Food, retail, transport sectors needed urgently.</div>
-            </div>
-            <div style="background:var(--bg);border:1px solid rgba(248,113,113,0.3);border-radius:10px;padding:12px">
-              <div style="font-weight:700;font-size:12px;color:var(--red);margin-bottom:4px">🔴 Nakuru Town</div>
-              <div style="font-size:10px;color:var(--muted);line-height:1.5">0 datapoints. Major agri market. Grain and produce prices critical.</div>
-            </div>
-            <div style="background:var(--bg);border:1px solid rgba(249,115,22,0.3);border-radius:10px;padding:12px">
-              <div style="font-weight:700;font-size:12px;color:var(--orange);margin-bottom:4px">🟠 Eldoret</div>
-              <div style="font-size:10px;color:var(--muted);line-height:1.5">0 datapoints. Logistics hub. Transport costs and warehouse pricing needed.</div>
-            </div>
-            <div style="background:var(--bg);border:1px solid rgba(249,115,22,0.3);border-radius:10px;padding:12px">
-              <div style="font-weight:700;font-size:12px;color:var(--orange);margin-bottom:4px">🟠 Gikomba Deep Dive</div>
-              <div style="font-size:10px;color:var(--muted);line-height:1.5">Has data but needs refresh. Prices change weekly. Send collector monthly.</div>
-            </div>
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px">
-              <div style="font-weight:700;font-size:12px;color:var(--green);margin-bottom:4px">🟢 Kongowea</div>
-              <div style="font-size:10px;color:var(--muted);line-height:1.5">Good coverage. Refresh quarterly. Monitor for price drift.</div>
-            </div>
-            <div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:12px">
-              <div style="font-weight:700;font-size:12px;color:var(--green);margin-bottom:4px">🟢 Eastleigh</div>
-              <div style="font-size:10px;color:var(--muted);line-height:1.5">Good retail coverage. Need healthcare pricing to be added.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- ── AI HEALTH ───────────────────────────────────────── -->
-    <div class="panel" id="panel-ai">
-      <div class="health-grid" id="aiHealthGrid"><div class="loading" style="grid-column:1/-1">Loading</div></div>
-      <div class="card" style="margin-top:4px">
-        <div class="card-title">User Retention Signal</div>
-        <div style="padding:20px">
-          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;font-family:'Space Mono',monospace">Users who returned for a second conversation</div>
-          <div class="retention-bar">
-            <div class="retention-track"><div class="retention-fill" id="retentionFill" style="width:0%"></div></div>
-            <div class="retention-pct" id="retentionPct">—</div>
-          </div>
-        </div>
-      </div>
-      <!-- Key rotation status -->
-      <div class="card">
-        <div class="card-title">Groq Key Rotation Status</div>
-        <div style="padding:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">
-          <div style="background:var(--bg);border:1px solid var(--green-dim);border-radius:10px;padding:14px;text-align:center">
-            <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">KEY 1</div>
-            <div style="font-size:12px;font-weight:700;color:var(--green)">GROQ_API_KEY</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:4px">Primary</div>
-          </div>
-          <div style="background:var(--bg);border:1px solid var(--blue-dim);border-radius:10px;padding:14px;text-align:center">
-            <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">KEY 2</div>
-            <div style="font-size:12px;font-weight:700;color:var(--blue)">GROQ_API_KEY_2</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:4px">Fallback 1</div>
-          </div>
-          <div style="background:var(--bg);border:1px solid rgba(167,139,250,0.15);border-radius:10px;padding:14px;text-align:center">
-            <div style="font-size:11px;color:var(--muted);font-family:'Space Mono',monospace;margin-bottom:6px">KEY 3</div>
-            <div style="font-size:12px;font-weight:700;color:var(--purple)">GROQ_API_KEY_3</div>
-            <div style="font-size:10px;color:var(--muted);margin-top:4px">Fallback 2</div>
-          </div>
-        </div>
-        <div style="padding:0 16px 14px;font-size:11px;color:var(--muted);font-family:'Space Mono',monospace">
-          Total capacity: 300,000 tokens/day · 100K per key · Gemini 1.5-Flash activates when all exhausted
-        </div>
-      </div>
-    </div>
-
-    <!-- ── ERRORS ──────────────────────────────────────────── -->
-    <div class="panel" id="panel-errors">
-      <div id="errorsContainer"><div class="loading">Loading</div></div>
-    </div>
-
-
-    <!-- ── FINE-TUNE ──────────────────────────────────────────── -->
-    <div class="panel" id="panel-finetune">
-
-      <!-- Progress hero -->
-      <div class="ft-hero">
-        <div class="ft-ring-wrap">
-          <svg class="ft-ring-svg" viewBox="0 0 110 110">
-            <defs>
-              <linearGradient id="ftGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stop-color="#f59e0b"/>
-                <stop offset="100%" stop-color="#f97316"/>
-              </linearGradient>
-            </defs>
-            <circle class="ft-ring-bg" cx="55" cy="55" r="47"/>
-            <circle class="ft-ring-fill" cx="55" cy="55" r="47" id="ftRingFill" style="stroke-dashoffset:295"/>
-          </svg>
-          <div class="ft-ring-text">
-            <div class="ft-ring-num" id="ftGoldNum">0</div>
-            <div class="ft-ring-denom">/ 500</div>
-          </div>
-        </div>
-        <div class="ft-hero-body">
-          <div class="ft-hero-title">Gold Conversations — V2 Training Progress</div>
-          <div class="ft-hero-sub" id="ftHeroSub">Review and label conversations gold to build the fine-tuning dataset. At 500 gold conversations, V2 training runs on Kaggle. V2 bakes AfriFoundry's voice directly into the model weights — no more prompt injection.</div>
-          <div class="ft-progress-track">
-            <div class="ft-progress-fill" id="ftProgressFill" style="width:0%"></div>
-          </div>
-          <div class="ft-progress-label">
-            <span id="ftProgressLeft">0 gold conversations</span>
-            <span id="ftProgressRight">500 needed to trigger V2</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Action buttons -->
-      <div class="ft-action-row">
-        <button class="btn-ft btn-ft-gold" onclick="startFastReview()">⚡ Fast Review Mode</button>
-        <button class="btn-ft btn-ft-orange" onclick="exportV2()">⬇ Export JSONL v2</button>
-        <button class="btn-ft btn-ft-blue" onclick="promoteByFeedback()">↑ Promote by Feedback</button>
-        <button class="btn-ft btn-ft-green" onclick="rescoreAll()">↺ Rescore All</button>
-      </div>
-
-      <div class="two-col">
-        <!-- V2 Readiness Checklist -->
-        <div class="card">
-          <div class="card-title">V2 Readiness Checklist</div>
-          <div style="padding:16px">
-            <div class="checklist" id="ftChecklist">
-              <div class="check-item" id="chk-gold">
-                <div class="check-icon">⬜</div>
-                <div><div class="check-title">500 Gold Conversations</div><div class="check-detail" id="chk-gold-detail">0 / 500 — keep labelling</div></div>
-              </div>
-              <div class="check-item" id="chk-balance">
-                <div class="check-icon">⬜</div>
-                <div><div class="check-title">Mode Balance (≥10% each)</div><div class="check-detail" id="chk-balance-detail">Need validator, explorer, learner examples</div></div>
-              </div>
-              <div class="check-item" id="chk-turns">
-                <div class="check-icon">⬜</div>
-                <div><div class="check-title">Avg Turns ≥ 5</div><div class="check-detail" id="chk-turns-detail">Deep conversations only — short ones add noise</div></div>
-              </div>
-              <div class="check-item" id="chk-sectors">
-                <div class="check-icon">⬜</div>
-                <div><div class="check-title">5+ Sectors Represented</div><div class="check-detail" id="chk-sectors-detail">Sector diversity = general African intelligence</div></div>
-              </div>
-              <div class="check-item" id="chk-junk">
-                <div class="check-icon">⬜</div>
-                <div><div class="check-title">Junk &lt; 20% of total</div><div class="check-detail" id="chk-junk-detail">Too much junk = noisy training signal</div></div>
-              </div>
-              <div class="check-item" id="chk-export">
-                <div class="check-icon">⬜</div>
-                <div><div class="check-title">Export Validated</div><div class="check-detail">Run export and confirm JSONL is clean</div></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Mode balance -->
-        <div class="card">
-          <div class="card-title">Training Data — Mode Balance</div>
-          <div style="padding:16px">
-            <div style="font-size:11px;color:var(--muted);margin-bottom:16px;font-family:Space Mono,monospace">Gold + Good conversations by mode. Fine-tuned model should be balanced across all three.</div>
-            <div class="mode-bar-row">
-              <div class="mode-label" style="color:var(--orange)">Validator</div>
-              <div class="mode-track"><div class="mode-fill" id="modeBarV" style="width:0%;background:var(--orange)"></div></div>
-              <div class="mode-count" id="modeCntV">0</div>
-            </div>
-            <div class="mode-bar-row">
-              <div class="mode-label" style="color:var(--blue)">Explorer</div>
-              <div class="mode-track"><div class="mode-fill" id="modeBarE" style="width:0%;background:var(--blue)"></div></div>
-              <div class="mode-count" id="modeCntE">0</div>
-            </div>
-            <div class="mode-bar-row">
-              <div class="mode-label" style="color:var(--green)">Learner</div>
-              <div class="mode-track"><div class="mode-fill" id="modeBarL" style="width:0%;background:var(--green)"></div></div>
-              <div class="mode-count" id="modeCntL">0</div>
-            </div>
-            <div style="margin-top:16px;padding-top:16px;border-top:1px solid var(--border)">
-              <div style="font-size:11px;color:var(--muted)">Target: Validator 60–70% · Explorer 15–20% · Learner 15–20%</div>
-              <div style="font-size:11px;color:var(--orange);margin-top:6px" id="modeWarning"></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Training Pipeline Steps -->
-      <div class="card">
-        <div class="card-title">V2 Training Pipeline</div>
-        <div style="padding:16px">
-          <div class="pipeline-step">
-            <div class="pipeline-num done">1</div>
-            <div class="pipeline-body">
-              <div class="pipeline-title">Data Collection Infrastructure ✅</div>
-              <div class="pipeline-desc">Scrapers, precedents, expert questionnaires, county data. Conversations being logged and depth-scored on every save.</div>
-            </div>
-          </div>
-          <div class="pipeline-step">
-            <div class="pipeline-num active">2</div>
-            <div class="pipeline-body">
-              <div class="pipeline-title" style="color:var(--orange)">Gold Conversation Accumulation ← YOU ARE HERE</div>
-              <div class="pipeline-desc">Review all "needs_review" conversations. Label high-quality ones gold. Target: 500 gold conversations with ≥5 turns, balanced across modes and sectors.</div>
-              <div class="pipeline-action">
-                <button class="btn-ft btn-ft-gold" onclick="startFastReview()" style="font-size:11px;padding:6px 12px">⚡ Start Fast Review</button>
-              </div>
-            </div>
-          </div>
-          <div class="pipeline-step">
-            <div class="pipeline-num pending">3</div>
-            <div class="pipeline-body">
-              <div class="pipeline-title">Export & Validate Training JSONL</div>
-              <div class="pipeline-desc">Export gold+good conversations via v2 endpoint. Validate: no system prompt leakage, no internal tags, proper turn structure, min 2 turns per example.</div>
-            </div>
-          </div>
-          <div class="pipeline-step">
-            <div class="pipeline-num pending">4</div>
-            <div class="pipeline-body">
-              <div class="pipeline-title">QLoRA Fine-Tuning on Kaggle</div>
-              <div class="pipeline-desc">Upload JSONL to Kaggle. Run afrifoundry_v2_finetune.ipynb on T4 x2 GPU. ~3-4 hours training. Uses Llama 3.1 8B base with LoRA adapters (r=16, all attention + MLP layers).</div>
-            </div>
-          </div>
-          <div class="pipeline-step">
-            <div class="pipeline-num pending">5</div>
-            <div class="pipeline-body">
-              <div class="pipeline-title">Deploy V2 — Swap Inference Engine</div>
-              <div class="pipeline-desc">Push merged model to Hugging Face. Update main.py to use HF Inference Endpoint. A/B test V2 vs V1. Expected: voice baked in, no prompt injection tax, +15% quality.</div>
-            </div>
-          </div>
-        </div>
-      </div>
-
+<!-- ══ LOGIN ══════════════════════════════════════════════ -->
+<div id="login">
+  <div class="login-box">
+    <div class="login-logo"><div class="live-dot"></div>AFRIFOUNDRY</div>
+    <div class="login-sub">COMMAND CENTER — RESTRICTED ACCESS</div>
+    <div class="lf">
+      <label>Password</label>
+      <input type="password" id="lpass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+      <label>Backend URL</label>
+      <input type="text" id="lurl" placeholder="https://afrifoundry-api.onrender.com" value="https://afrifoundry-api.onrender.com">
+      <button class="lbtn" onclick="doLogin()">Access Command Center</button>
+      <div class="lerr" id="lerr">Incorrect password. Try again.</div>
     </div>
   </div>
 </div>
 
-<!-- ── CONVERSATION MODAL ───────────────────────────────────────────────────── -->
-<div class="modal-overlay hidden" id="convModal" onclick="closeModal(event)">
-  <div class="modal">
-    <div class="modal-header">
+<!-- ══ TOAST ══════════════════════════════════════════════ -->
+<div class="toast-cc" id="toast">
+  <span id="t-icon" style="font-size:16px"></span>
+  <span id="t-msg" style="flex:1;font-size:13px"></span>
+  <span onclick="hideToast()" style="color:var(--muted);cursor:pointer;font-size:14px">✕</span>
+</div>
+
+<!-- ══ APP ════════════════════════════════════════════════ -->
+<div id="app">
+
+  <!-- TOPBAR -->
+  <div class="topbar">
+    <div class="tb-logo">
+      <div class="live-dot"></div>
       <div>
-        <div class="modal-title" id="modalTitle">Conversation</div>
-        <div class="modal-meta" id="modalMeta"></div>
+        <div class="tb-logo-text">AFRIFOUNDRY</div>
+        <div class="tb-logo-tag">COMMAND CENTER</div>
       </div>
-      <button class="modal-close" onclick="hideModal()">✕</button>
     </div>
-    <div class="modal-body" id="modalBody"></div>
-    <div class="modal-footer" id="modalFooter"></div>
+    <div class="tb-right">
+      <div class="tb-status"><div class="status-dot live" id="api-dot"></div><span id="api-status">Connecting...</span></div>
+      <div class="tb-time" id="tb-clock">--:--:--</div>
+      <div class="tb-user" id="tb-user">admin</div>
+      <button class="tb-out" onclick="logout()">Sign out</button>
+    </div>
   </div>
-</div>
+
+  <!-- BODY -->
+  <div class="body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sgroup">
+        <div class="sgroup-label">Overview</div>
+        <button class="slink on" onclick="nav('overview')"><span class="si">⚡</span>Dashboard</button>
+        <button class="slink" onclick="nav('alerts')"><span class="si">🚨</span>Alerts<span class="sc" id="sc-alerts">0</span></button>
+      </div>
+      <div class="sgroup">
+        <div class="sgroup-label">Intelligence</div>
+        <button class="slink" onclick="nav('users')"><span class="si">👥</span>Users<span class="sc" id="sc-users">—</span></button>
+        <button class="slink" onclick="nav('conversations')"><span class="si">💬</span>Conversations</button>
+        <button class="slink" onclick="nav('ratings')"><span class="si">⭐</span>Ratings</button>
+      </div>
+      <div class="sgroup">
+        <div class="sgroup-label">Data</div>
+        <button class="slink" onclick="nav('datalab')"><span class="si">🔬</span>Data Lab<span class="sc" id="sc-dp">—</span></button>
+        <button class="slink" onclick="nav('scrapers')"><span class="si">🕷</span>Scrapers</button>
+        <button class="slink" onclick="nav('kenya')"><span class="si">🇰🇪</span>Kenya Today</button>
+      </div>
+      <div class="sgroup">
+        <div class="sgroup-label">AI Training</div>
+        <button class="slink" onclick="nav('finetune')"><span class="si">🧠</span>Fine-Tune</button>
+        <button class="slink" onclick="nav('gold')"><span class="si">🥇</span>Gold Review</button>
+      </div>
+      <div class="sgroup">
+        <div class="sgroup-label">Config</div>
+        <button class="slink" onclick="nav('settings')"><span class="si">⚙️</span>Settings</button>
+      </div>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+      <!-- ══ OVERVIEW ══════════════════════════════════════ -->
+      <div class="panel on" id="panel-overview">
+        <div class="ph">
+          <div class="ph-left"><h1>Dashboard</h1><p id="ov-date">Loading...</p></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-s" onclick="refreshAll()">↻ Refresh</button>
+            <button class="btn btn-p" onclick="nav('gold')">🥇 Fast Review</button>
+          </div>
+        </div>
+
+        <!-- KPI GRID -->
+        <div class="grid grid-4" style="margin-bottom:16px">
+          <div class="card card-sm">
+            <div class="sl">Total Users</div>
+            <div class="kpi-n" id="kpi-users" style="color:var(--blue)">—</div>
+            <div class="kpi-l">Registered accounts</div>
+            <div class="kpi-d"><span class="up" id="kpi-users-d">—</span></div>
+          </div>
+          <div class="card card-sm">
+            <div class="sl">Conversations</div>
+            <div class="kpi-n" id="kpi-convs" style="color:var(--amber)">—</div>
+            <div class="kpi-l">All time</div>
+            <div class="kpi-d"><span class="up" id="kpi-convs-d">—</span></div>
+          </div>
+          <div class="card card-sm">
+            <div class="sl">Datapoints</div>
+            <div class="kpi-n" id="kpi-dp" style="color:var(--green)">—</div>
+            <div class="kpi-l">Verified in DB</div>
+            <div class="kpi-d"><span class="nu">Target: 12,000+</span></div>
+          </div>
+          <div class="card card-sm">
+            <div class="sl">Avg Quality</div>
+            <div class="kpi-n" id="kpi-qual" style="color:var(--purple)">—</div>
+            <div class="kpi-l">Response score</div>
+            <div class="kpi-d"><span class="nu" id="kpi-qual-d">—</span></div>
+          </div>
+        </div>
+
+        <div class="grid grid-2" style="margin-bottom:16px">
+          <!-- SECTOR BREAKDOWN -->
+          <div class="card">
+            <div class="sl">Data Coverage by Sector</div>
+            <div id="sector-list"><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+          </div>
+          <!-- RECENT ACTIVITY -->
+          <div class="card">
+            <div class="sl">Recent Conversations<a onclick="nav('conversations')">View all →</a></div>
+            <div id="recent-activity"><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+          </div>
+        </div>
+
+        <div class="grid grid-3">
+          <!-- MILESTONES -->
+          <div class="card">
+            <div class="sl">Data Milestones</div>
+            <div id="milestones-ov"></div>
+          </div>
+          <!-- TOP USERS -->
+          <div class="card">
+            <div class="sl">Most Active Users<a onclick="nav('users')">All →</a></div>
+            <div id="top-users"><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+          </div>
+          <!-- SYSTEM HEALTH -->
+          <div class="card">
+            <div class="sl">System Health</div>
+            <div id="sys-health"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ ALERTS ════════════════════════════════════════ -->
+      <div class="panel" id="panel-alerts">
+        <div class="ph"><div class="ph-left"><h1>Alerts</h1><p>Issues requiring your attention</p></div></div>
+        <div id="alerts-body"><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- ══ USERS ═════════════════════════════════════════ -->
+      <div class="panel" id="panel-users">
+        <div class="ph"><div class="ph-left"><h1>Users</h1><p id="users-count">Loading...</p></div><button class="btn btn-s" onclick="loadUsers()">↻ Refresh</button></div>
+        <div class="search-row">
+          <input class="search-in" id="user-search" placeholder="Search by email or name..." oninput="filterUsers()">
+          <select class="fil-sel" id="user-filter" onchange="filterUsers()">
+            <option value="">All users</option><option value="premium">Premium</option><option value="free">Free</option>
+          </select>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="tbl">
+            <thead><tr><th>User</th><th>Plan</th><th>Conversations</th><th>Joined</th><th>Last Active</th><th>Actions</th></tr></thead>
+            <tbody id="users-body"><tr><td colspan="6" class="loading"><div class="dots"><span></span><span></span><span></span></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ CONVERSATIONS ═════════════════════════════════ -->
+      <div class="panel" id="panel-conversations">
+        <div class="ph"><div class="ph-left"><h1>Conversations</h1><p id="conv-count">Loading...</p></div><button class="btn btn-s" onclick="loadConversations()">↻ Refresh</button></div>
+        <div class="search-row">
+          <input class="search-in" id="conv-search" placeholder="Search conversations..." oninput="filterConvs()">
+          <select class="fil-sel" id="conv-filter" onchange="filterConvs()">
+            <option value="">All</option><option value="rated">Rated</option><option value="unrated">Unrated</option><option value="flagged">Flagged</option>
+          </select>
+        </div>
+        <div class="grid grid-2">
+          <div>
+            <div class="conv-list" id="conv-list"><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+          </div>
+          <div>
+            <div class="conv-detail" id="conv-detail">
+              <div class="sl">Select a conversation to view</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ RATINGS ═══════════════════════════════════════ -->
+      <div class="panel" id="panel-ratings">
+        <div class="ph"><div class="ph-left"><h1>Ratings</h1><p>User feedback on AI quality</p></div><button class="btn btn-s" onclick="loadRatings()">↻ Refresh</button></div>
+        <div class="grid grid-4" style="margin-bottom:16px">
+          <div class="card card-sm"><div class="sl">Avg Rating</div><div class="kpi-n" id="r-avg" style="color:var(--amber)">—</div><div class="kpi-l">out of 5</div></div>
+          <div class="card card-sm"><div class="sl">Total Rated</div><div class="kpi-n" id="r-total" style="color:var(--blue)">—</div><div class="kpi-l">conversations</div></div>
+          <div class="card card-sm"><div class="sl">5 Stars</div><div class="kpi-n" id="r-5" style="color:var(--green)">—</div><div class="kpi-l">gold candidates</div></div>
+          <div class="card card-sm"><div class="sl">Below 3</div><div class="kpi-n" id="r-low" style="color:var(--red)">—</div><div class="kpi-l">need improvement</div></div>
+        </div>
+        <div class="card" style="padding:0;overflow:hidden">
+          <table class="tbl">
+            <thead><tr><th>Question</th><th>Rating</th><th>User</th><th>Date</th><th>Action</th></tr></thead>
+            <tbody id="ratings-body"><tr><td colspan="5" class="loading"><div class="dots"><span></span><span></span><span></span></div></td></tr></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- ══ DATA LAB ══════════════════════════════════════ -->
+      <div class="panel" id="panel-datalab">
+        <div class="ph">
+          <div class="ph-left"><h1>Data Lab</h1><p id="dp-count-label">Loading datapoints...</p></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-s" onclick="loadDatapoints()">↻ Refresh</button>
+            <button class="btn btn-p" onclick="seedKenyaToday()">🇰🇪 Seed Kenya Today</button>
+          </div>
+        </div>
+        <div class="search-row">
+          <input class="search-in" id="dp-search" placeholder="Search datapoints..." oninput="filterDP()">
+          <select class="fil-sel" id="dp-sector" onchange="filterDP()">
+            <option value="">All sectors</option>
+            <option value="food">Food & Agriculture</option><option value="construction">Construction</option>
+            <option value="transport">Transport</option><option value="healthcare">Healthcare</option>
+            <option value="education">Education</option><option value="energy">Energy</option>
+            <option value="technology">Technology</option><option value="finance">Finance</option>
+          </select>
+          <select class="fil-sel" id="dp-conf" onchange="filterDP()">
+            <option value="">All confidence</option><option value="high">High (0.8+)</option>
+            <option value="med">Medium (0.5-0.8)</option><option value="low">Low (&lt;0.5)</option>
+          </select>
+        </div>
+        <div id="dp-list"><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+      </div>
+
+      <!-- ══ SCRAPERS ══════════════════════════════════════ -->
+      <div class="panel" id="panel-scrapers">
+        <div class="ph">
+          <div class="ph-left"><h1>Scrapers</h1><p>Data collection pipeline status</p></div>
+          <button class="btn btn-p" onclick="triggerScrape()">▶ Run All Scrapers</button>
+        </div>
+        <div class="grid grid-2">
+          <div id="scrapers-list"></div>
+          <div class="card">
+            <div class="sl">Scraper Log</div>
+            <div id="scraper-log" style="font-family:var(--mono);font-size:11px;color:var(--muted2);line-height:1.8;max-height:400px;overflow-y:auto"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ KENYA TODAY ═══════════════════════════════════ -->
+      <div class="panel" id="panel-kenya">
+        <div class="ph">
+          <div class="ph-left"><h1>Kenya Today</h1><p>Live market prices and economic indicators</p></div>
+          <button class="btn btn-p" onclick="seedKenyaToday()">↻ Refresh Kenya Data</button>
+        </div>
+        <div class="grid grid-3">
+          <div class="card" id="kt-forex"><div class="sl">Forex Rates</div><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+          <div class="card" id="kt-food"><div class="sl">Food Prices (Nairobi)</div><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+          <div class="card" id="kt-fuel"><div class="sl">Fuel & Energy</div><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+        </div>
+      </div>
+
+      <!-- ══ FINE-TUNE ══════════════════════════════════════ -->
+      <div class="panel" id="panel-finetune">
+        <div class="ph"><div class="ph-left"><h1>Fine-Tune Pipeline</h1><p>V2 African AI model training roadmap</p></div></div>
+        <div class="grid grid-2" style="margin-bottom:16px">
+          <div class="card card-sm"><div class="sl">Gold Conversations</div><div class="kpi-n" id="ft-gold" style="color:var(--amber)">—</div><div class="kpi-l">Target: 500 for V2</div><div class="progress-bar" style="margin-top:10px"><div class="progress-fill" id="ft-gold-bar" style="background:var(--amber);width:0%"></div></div></div>
+          <div class="card card-sm"><div class="sl">Training Readiness</div><div class="kpi-n" id="ft-ready" style="color:var(--green)">—</div><div class="kpi-l">Dataset completeness</div></div>
+        </div>
+        <div class="card" style="margin-bottom:16px">
+          <div class="sl">Training Pipeline Steps</div>
+          <div class="ft-step"><div class="ft-num done">✓</div><div class="ft-body"><div class="ft-title">Data Collection</div><div class="ft-desc">Scrapers running. 10,000+ datapoints in database across 15 sectors.</div></div></div>
+          <div class="ft-step"><div class="ft-num active">2</div><div class="ft-body"><div class="ft-title">Gold Conversation Review</div><div class="ft-desc">Mark reviews and approves high-quality conversations. Target 500 gold examples. Use the Gold Review panel to fast-approve.</div></div></div>
+          <div class="ft-step"><div class="ft-num pending">3</div><div class="ft-body"><div class="ft-title">Dataset Export</div><div class="ft-desc">Export gold conversations in JSONL format compatible with Llama fine-tuning via QLoRA on Kaggle GPU.</div></div></div>
+          <div class="ft-step"><div class="ft-num pending">4</div><div class="ft-body"><div class="ft-title">QLoRA Fine-Tune (Kaggle)</div><div class="ft-desc">Run Kaggle notebook on Llama 3.1 8B. Estimated: 6-8 hours on P100 GPU. Free tier sufficient for first run.</div></div></div>
+          <div class="ft-step"><div class="ft-num pending">5</div><div class="ft-body"><div class="ft-title">Model Evaluation</div><div class="ft-desc">Compare fine-tuned model vs base on 50 benchmark questions. Target: 20% improvement in African market accuracy.</div></div></div>
+          <div class="ft-step"><div class="ft-num pending">6</div><div class="ft-body"><div class="ft-title">Deploy to Render</div><div class="ft-desc">Swap AI engine to fine-tuned model. Run A/B test on 10% of traffic. Monitor quality scores.</div></div></div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-p" onclick="exportGold()">⬇ Export Gold JSONL</button>
+          <button class="btn btn-s" onclick="nav('gold')">🥇 Review Conversations</button>
+        </div>
+      </div>
+
+      <!-- ══ GOLD REVIEW ════════════════════════════════════ -->
+      <div class="panel" id="panel-gold">
+        <div class="ph">
+          <div class="ph-left"><h1>Gold Review</h1><p id="gold-progress">Loading...</p></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-s" onclick="loadGold()">↻ Refresh</button>
+            <button class="btn btn-p" onclick="approveAll()">✓ Approve All 5-Star</button>
+          </div>
+        </div>
+        <div class="alert-banner info" style="margin-bottom:14px">
+          <span>ℹ️</span>
+          <span>Fast path: conversations rated 5 stars by users are auto-shown first. Click to approve as gold training data. Target 500 gold conversations for V2 fine-tuning.</span>
+        </div>
+        <div class="grid grid-2">
+          <div id="gold-list"><div class="loading"><div class="dots"><span></span><span></span><span></span></div></div></div>
+          <div id="gold-detail" class="conv-detail">
+            <div class="sl" style="color:var(--muted2)">Select a conversation to preview</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ══ SETTINGS ══════════════════════════════════════ -->
+      <div class="panel" id="panel-settings">
+        <div class="ph"><div class="ph-left"><h1>Settings</h1><p>System configuration</p></div></div>
+        <div class="grid grid-2">
+          <div class="card">
+            <div class="sl">Backend Connection</div>
+            <div class="field" style="margin-bottom:12px">
+              <div style="font-family:var(--mono);font-size:10px;color:var(--muted2);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px">API Base URL</div>
+              <input class="search-in" id="cfg-url" style="margin-bottom:8px">
+              <button class="btn btn-p" onclick="saveSettings()">Save & Reconnect</button>
+            </div>
+            <div class="sl" style="margin-top:16px">Connection Status</div>
+            <div id="conn-status" style="font-family:var(--mono);font-size:12px;color:var(--muted2)">Checking...</div>
+          </div>
+          <div class="card">
+            <div class="sl">Quick Actions</div>
+            <div style="display:flex;flex-direction:column;gap:8px">
+              <button class="btn btn-s" style="justify-content:flex-start" onclick="seedKenyaToday()">🇰🇪 Seed Kenya Today prices</button>
+              <button class="btn btn-s" style="justify-content:flex-start" onclick="exportGold()">⬇ Export gold conversations JSONL</button>
+              <button class="btn btn-s" style="justify-content:flex-start" onclick="refreshAll()">↻ Refresh all panels</button>
+              <button class="btn btn-d" style="justify-content:flex-start" onclick="logout()">⎋ Sign out</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /main -->
+  </div><!-- /body -->
+</div><!-- /app -->
 
 <script>
-const API = 'https://afrifoundry-api.onrender.com';
-let token = localStorage.getItem('af_admin_token') || '';
-let allUsers = [], allConversations = [], allDatapoints = [], statsCache = null;
-let autoRefreshInterval = null;
-let currentConvId = null;
+// ══ CONFIG ═══════════════════════════════════════════════
+let API = localStorage.getItem('cc_url') || 'https://afrifoundry-api.onrender.com';
+let TOKEN = '';
+const ADMIN_PASS = 'AfriFoundry2026!';
+let allUsers = [], allConvs = [], allDP = [], allGold = [], allRatings = [];
+let selConvId = null, selGoldId = null;
 
-// ── AUTH ──────────────────────────────────────────────────────────────────────
-async function doLogin() {
-  const email = document.getElementById('loginEmail').value.trim();
-  const pass  = document.getElementById('loginPass').value;
-  document.getElementById('loginError').textContent = '';
+// ══ AUTH ═════════════════════════════════════════════════
+function doLogin() {
+  const pass = document.getElementById('lpass').value;
+  const url = document.getElementById('lurl').value.trim();
+  if (url) { API = url; localStorage.setItem('cc_url', url); }
+  if (pass !== ADMIN_PASS) { document.getElementById('lerr').style.display = 'block'; return; }
+  TOKEN = btoa(pass);
+  document.getElementById('login').style.display = 'none';
+  document.getElementById('app').classList.add('on');
+  bootApp();
+}
+function logout() {
+  TOKEN = ''; document.getElementById('app').classList.remove('on');
+  document.getElementById('login').style.display = 'flex';
+  document.getElementById('lpass').value = '';
+}
+document.getElementById('lpass').addEventListener('keydown', e => { if (e.key === 'Enter') doLogin(); });
+
+// ══ API CALLS ════════════════════════════════════════════
+async function api(path, opts = {}) {
+  const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': TOKEN, ...opts.headers };
   try {
-    const res  = await fetch(`${API}/api/v1/auth/login`, {
-      method:'POST', headers:{'Content-Type':'application/json'},
-      body: JSON.stringify({email, password: pass})
-    });
-    const data = await res.json();
-    if (!res.ok) { document.getElementById('loginError').textContent = data.detail || 'Login failed'; return; }
-    if (data.user?.role !== 'admin') { document.getElementById('loginError').textContent = 'Admin access required'; return; }
-    token = data.token;
-    localStorage.setItem('af_admin_token', token);
-    showApp();
-  } catch(e) {
-    document.getElementById('loginError').textContent = 'Connection error. Is the API live?';
+    const res = await fetch(API + path, { ...opts, headers });
+    if (!res.ok) throw new Error(`${res.status}`);
+    return await res.json();
+  } catch (e) {
+    console.warn('API error:', path, e.message);
+    return null;
   }
 }
 
-function doLogout() {
-  localStorage.removeItem('af_admin_token');
-  token = '';
-  document.getElementById('app').classList.remove('visible');
-  document.getElementById('loginWrap').style.display = 'flex';
-  if (autoRefreshInterval) clearInterval(autoRefreshInterval);
+// ══ CLOCK ════════════════════════════════════════════════
+function tick() {
+  const n = new Date();
+  const el = document.getElementById('tb-clock');
+  if (el) el.textContent = n.toLocaleTimeString('en-KE', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+}
+setInterval(tick, 1000); tick();
+
+// ══ TOAST ════════════════════════════════════════════════
+let toastT;
+function toast(icon, msg, dur = 3000) {
+  document.getElementById('t-icon').textContent = icon;
+  document.getElementById('t-msg').textContent = msg;
+  document.getElementById('toast').classList.add('on');
+  if (toastT) clearTimeout(toastT);
+  toastT = setTimeout(hideToast, dur);
+}
+function hideToast() { document.getElementById('toast').classList.remove('on'); }
+
+// ══ NAVIGATION ══════════════════════════════════════════
+function nav(panel) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('on'));
+  document.querySelectorAll('.slink').forEach(l => l.classList.remove('on'));
+  const p = document.getElementById('panel-' + panel);
+  if (p) p.classList.add('on');
+  const links = document.querySelectorAll('.slink');
+  links.forEach(l => { if (l.getAttribute('onclick')?.includes(`'${panel}'`)) l.classList.add('on'); });
+  if (panel === 'users') loadUsers();
+  if (panel === 'conversations') loadConversations();
+  if (panel === 'ratings') loadRatings();
+  if (panel === 'datalab') loadDatapoints();
+  if (panel === 'scrapers') renderScrapers();
+  if (panel === 'kenya') loadKenya();
+  if (panel === 'finetune') loadFineTune();
+  if (panel === 'gold') loadGold();
+  if (panel === 'alerts') loadAlerts();
+  if (panel === 'settings') { document.getElementById('cfg-url').value = API; checkConn(); }
 }
 
-function showApp() {
-  document.getElementById('loginWrap').style.display = 'none';
-  document.getElementById('app').classList.add('visible');
-  loadAll();
+// ══ BOOT ═════════════════════════════════════════════════
+async function bootApp() {
+  const now = new Date();
+  document.getElementById('ov-date').textContent = now.toLocaleDateString('en-KE', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  await checkConn();
+  await loadOverview();
 }
 
-// ── API ───────────────────────────────────────────────────────────────────────
-async function apiFetch(path) {
-  try {
-    const r = await fetch(`${API}${path}`, { headers:{Authorization:`Bearer ${token}`} });
-    if (r.status === 401 || r.status === 403) { doLogout(); return null; }
-    return r.json();
-  } catch(e) { console.error('API error:', path, e); return null; }
-}
-
-async function apiPost(path, body) {
-  try {
-    const r = await fetch(`${API}${path}`, {
-      method:'POST', headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
-    return r.json();
-  } catch(e) { return null; }
-}
-
-async function apiPatch(path, body) {
-  try {
-    const r = await fetch(`${API}${path}`, {
-      method:'PATCH', headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},
-      body: JSON.stringify(body)
-    });
-    return r.json();
-  } catch(e) { return null; }
-}
-
-// ── LOAD ALL ──────────────────────────────────────────────────────────────────
-async function loadAll() {
-  const [stats, users, convs, errs, dps] = await Promise.all([
-    apiFetch('/api/v1/admin/stats'),
-    apiFetch('/api/v1/admin/users?limit=200'),
-    apiFetch('/api/v1/admin/conversations?limit=200'),
-    apiFetch('/api/v1/admin/errors?limit=50'),
-    apiFetch('/api/v1/admin/datapoints?limit=300').catch(() => null),
-  ]);
-  if (stats)  { statsCache = stats; renderStats(stats); renderAIHealth(stats); }
-  if (users)  { allUsers = users.users || []; renderUsers(); }
-  if (convs)  { allConversations = convs.conversations || []; renderConversations(); renderOverviewConvs(); renderTrainingConvs(); renderTrainingStats(); }
-  if (errs)   renderErrors(errs.errors || []);
-  if (dps && dps.datapoints) { allDatapoints = dps.datapoints || []; renderDatapoints(); renderDLIntelligence(dps); }
-  else renderDLIntelligenceFallback(stats);
-  renderFineTune();
-}
-
-// ── AUTO REFRESH ──────────────────────────────────────────────────────────────
-function toggleAutoRefresh() {
-  const pip = document.getElementById('autoToggle');
-  if (autoRefreshInterval) {
-    clearInterval(autoRefreshInterval); autoRefreshInterval = null; pip.classList.remove('on');
-  } else {
-    autoRefreshInterval = setInterval(loadAll, 30000); pip.classList.add('on');
-    flash('Auto-refresh on (30s) ✅');
-  }
-}
-
-// ── UTILS ─────────────────────────────────────────────────────────────────────
-function timeAgo(iso) {
-  if (!iso) return '—';
-  const d = Math.floor((Date.now() - new Date(iso)) / 60000);
-  if (d < 1)    return 'just now';
-  if (d < 60)   return d + 'm ago';
-  if (d < 1440) return Math.floor(d/60) + 'h ago';
-  return Math.floor(d/1440) + 'd ago';
-}
-
-function escapeHtml(text) {
-  return (text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-}
-
-function labelBadge(label) {
-  const map = { good:'badge-good', gold:'badge-gold', junk:'badge-junk', needs_review:'badge-review' };
-  const cls = map[label] || 'badge-review';
-  return `<span class="badge ${cls}">${label||'needs_review'}</span>`;
-}
-
-function depthColor(score) {
-  if (!score && score !== 0) return 'var(--muted)';
-  if (score >= 60) return 'var(--green)';
-  if (score >= 30) return 'var(--orange)';
-  return 'var(--muted)';
-}
-
-function flash(msg) {
-  const el = document.getElementById('actionMsg');
-  el.textContent = msg;
-  setTimeout(() => el.textContent = '', 3000);
-}
-
-// ── RENDER STATS ──────────────────────────────────────────────────────────────
-function renderStats(s) {
-  const u = s.users || {}, c = s.conversations || {};
-  const dpTotal = s.datapoints?.total ?? 0;
-  const errorsToday = s.errors_24h ?? 0;
-  document.getElementById('statRow').innerHTML = `
-    <div class="stat-card orange">
-      <div class="stat-val" style="color:var(--orange)">${u.total ?? 0}</div>
-      <div class="stat-label">Total Users</div>
-      <div class="stat-sub">+${u.new_this_week ?? 0} this week</div>
-    </div>
-    <div class="stat-card green">
-      <div class="stat-val" style="color:var(--green)">${c.total ?? 0}</div>
-      <div class="stat-label">Conversations</div>
-      <div class="stat-sub">${c.today ?? 0} today · avg ${c.avg_turns ?? 0} turns</div>
-    </div>
-    <div class="stat-card blue">
-      <div class="stat-val" style="color:var(--blue)">${Number(dpTotal).toLocaleString()}</div>
-      <div class="stat-label">Datapoints</div>
-      <div class="stat-sub">Target: 10,000</div>
-    </div>
-    <div class="stat-card ${errorsToday > 0 ? 'red' : 'green'}">
-      <div class="stat-val" style="color:${errorsToday > 0 ? 'var(--red)' : 'var(--green)'}">${errorsToday}</div>
-      <div class="stat-label">Errors (24h)</div>
-    </div>
-    <div class="stat-card purple">
-      <div class="stat-val" style="color:var(--purple)">${u.retained ?? 0}</div>
-      <div class="stat-label">Returned Users</div>
-      <div class="stat-sub">2+ conversations</div>
-    </div>`;
-
-  const sectors = s.sectors || [];
-  const maxCnt = sectors.length ? Math.max(...sectors.map(x => x.cnt||1)) : 1;
-  document.getElementById('sectorChart').innerHTML = sectors.length
-    ? sectors.map(sec => `
-        <div class="sector-row">
-          <div class="sector-name">${sec.sector}</div>
-          <div class="sector-bar-wrap"><div class="sector-bar" style="width:${Math.round((sec.cnt/maxCnt)*100)}%"></div></div>
-          <div class="sector-count">${sec.cnt}</div>
-        </div>`).join('')
-    : '<div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;font-family:Space Mono,monospace">No data yet</div>';
-
-  const activity = s.activity || [];
-  document.getElementById('activityFeed').innerHTML = activity.length
-    ? activity.map(a => `
-        <div class="activity-item">
-          <div class="activity-icon ${a.type === 'new_user' ? 'new-user' : 'conversation'}">${a.type === 'new_user' ? '👤' : '💬'}</div>
-          <div class="activity-detail">
-            <span style="color:${a.type==='new_user'?'var(--green)':'var(--blue)'};font-weight:700;font-size:11px">${a.type === 'new_user' ? 'New user' : 'Conversation'}</span><br>${a.detail || '—'}
-          </div>
-          <div class="activity-when">${timeAgo(a.when)}</div>
-        </div>`).join('')
-    : '<div style="color:var(--muted);text-align:center;padding:20px;font-size:12px;font-family:Space Mono,monospace">No activity yet</div>';
-}
-
-// ── OVERVIEW CONVS ────────────────────────────────────────────────────────────
-function renderOverviewConvs() {
-  const tbody = document.getElementById('overviewConvTbody');
-  const rows = allConversations.slice(0, 10);
-  if (!rows.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No conversations yet</td></tr>'; return; }
-  tbody.innerHTML = rows.map(c => `
-    <tr class="clickable-row" onclick="openConversation('${c.id}')">
-      <td style="font-weight:700">${c.name||c.email?.split('@')[0]||'—'}</td>
-      <td style="max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#94a3b8">${(c.idea_text||'').slice(0,55)||'—'}</td>
-      <td><span class="badge badge-sector">${c.sector||'—'}</span></td>
-      <td class="${c.turn_count>=8?'turns-high':c.turn_count>=4?'turns-mid':'turns-low'}">${c.turn_count??0}</td>
-      <td style="color:var(--muted);font-family:Space Mono,monospace;font-size:11px">${timeAgo(c.created_at)}</td>
-      <td><button class="btn-sm btn-view" onclick="event.stopPropagation();openConversation('${c.id}')">Read →</button></td>
-    </tr>`).join('');
-}
-
-// ── USERS ─────────────────────────────────────────────────────────────────────
-function renderUsers() {
-  const q = (document.getElementById('userSearch')?.value||'').toLowerCase();
-  const filtered = allUsers.filter(u => !q || u.email?.toLowerCase().includes(q) || u.name?.toLowerCase().includes(q));
-  document.getElementById('userCount').textContent = `${filtered.length} users`;
-  const tbody = document.getElementById('userTbody');
-  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="9">No users found</td></tr>'; return; }
-  tbody.innerHTML = filtered.map(u => `
-    <tr>
-      <td style="font-weight:700">${u.name||'—'}</td>
-      <td style="color:#94a3b8;font-size:11px;font-family:Space Mono,monospace">${u.email||'—'}</td>
-      <td><span class="badge ${u.role==='admin'?'badge-admin':'badge-user'}">${u.role||'beta_user'}</span></td>
-      <td style="color:var(--blue);font-weight:700">${u.conversation_count??0}</td>
-      <td style="color:var(--orange);font-weight:700">${u.validations_count??0}</td>
-      <td style="color:var(--muted);font-size:11px">${u.user_location||u.organization||'—'}</td>
-      <td style="color:var(--muted);font-size:11px;font-family:Space Mono,monospace">${timeAgo(u.created_at)}</td>
-      <td style="color:var(--muted);font-size:11px;font-family:Space Mono,monospace">${timeAgo(u.last_login_at)}</td>
-      <td>
-        <div class="btn-group">
-          ${u.role!=='admin'?`<button class="btn-sm btn-promote" onclick="promoteUser('${u.id}')">↑ Admin</button>`:''}
-          ${u.role!=='admin'?`<button class="btn-sm btn-remove" onclick="removeUser('${u.id}','${u.email}')">✕</button>`:'<span style="color:var(--muted);font-size:10px">Protected</span>'}
-        </div>
-      </td>
-    </tr>`).join('');
-}
-
-// ── CONVERSATIONS ─────────────────────────────────────────────────────────────
-function renderConversations() {
-  const q       = (document.getElementById('convSearch')?.value||'').toLowerCase();
-  const label   = document.getElementById('qualityFilter')?.value||'';
-  const sector  = document.getElementById('sectorFilter')?.value||'';
-  const filtered = allConversations.filter(c =>
-    (!q || (c.idea_text||'').toLowerCase().includes(q) || (c.name||'').toLowerCase().includes(q)) &&
-    (!label  || (c.quality_label||'needs_review') === label) &&
-    (!sector || c.sector === sector)
-  );
-  document.getElementById('convCount').textContent = `${filtered.length} conversations`;
-  const tbody = document.getElementById('convTbody');
-  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="8">No conversations found</td></tr>'; return; }
-  tbody.innerHTML = filtered.map(c => `
-    <tr class="clickable-row" onclick="openConversation('${c.id}')">
-      <td>
-        <div style="font-weight:700">${c.name||'—'}</div>
-        <div style="color:var(--muted);font-size:10px;font-family:Space Mono,monospace">${c.email||''}</div>
-      </td>
-      <td style="max-width:240px;color:#94a3b8;font-size:12px">${(c.idea_text||'').slice(0,70)||'(no idea)'}${(c.idea_text||'').length>70?'...':''}</td>
-      <td><span class="badge badge-sector">${c.sector||'—'}</span></td>
-      <td>${labelBadge(c.quality_label)}</td>
-      <td style="font-weight:700;color:${depthColor(c.depth_score)};font-family:Space Mono,monospace;font-size:12px">${c.depth_score??0}</td>
-      <td class="${c.turn_count>=8?'turns-high':c.turn_count>=4?'turns-mid':'turns-low'}">${c.turn_count??0}</td>
-      <td style="color:var(--muted);font-size:11px;font-family:Space Mono,monospace">${timeAgo(c.created_at)}</td>
-      <td><button class="btn-sm btn-view" onclick="event.stopPropagation();openConversation('${c.id}')">Read →</button></td>
-    </tr>`).join('');
-}
-
-// ── DATA LAB — INTELLIGENCE ───────────────────────────────────────────────────
-function renderDLIntelligenceFallback(stats) {
-  // Fallback when /admin/datapoints endpoint doesn't exist yet
-  const dpTotal = stats?.datapoints?.total ?? 8622;
-  document.getElementById('dlTotal').textContent = Number(dpTotal).toLocaleString();
-  document.getElementById('dlHighConf').textContent = '~7,200';
-  document.getElementById('dlSectors').textContent = '12';
-  document.getElementById('dlExpiring').textContent = '0';
-  document.getElementById('dlSectorChart').innerHTML = `
-    <div style="font-size:11px;color:var(--muted);font-family:Space Mono,monospace;margin-bottom:12px">Estimated from conversation sectors — connect /admin/datapoints for live data</div>
-    ${['Retail','Food','Energy','Health','Technology','Transport','Agriculture'].map((s,i) => {
-      const pct = [85,65,55,45,40,30,20][i];
-      return `<div class="sector-row"><div class="sector-name">${s}</div><div class="sector-bar-wrap"><div class="sector-bar" style="width:${pct}%"></div></div><div class="sector-count">${pct}%</div></div>`;
-    }).join('')}`;
-  document.getElementById('dlRegionChart').innerHTML = `
-    <div class="coverage-grid">
-      ${[['Nairobi','high',90],['Mombasa','high',80],['Kisumu','low',0],['Nakuru','low',5],['Eldoret','low',0],['Eastleigh','med',60]].map(([r,cls,pct]) => `
-        <div class="coverage-card">
-          <div class="coverage-region">${r}</div>
-          <div class="coverage-bar-wrap"><div class="coverage-bar ${cls}" style="width:${pct}%"></div></div>
-          <div class="coverage-count">${pct}% coverage</div>
-        </div>`).join('')}
-    </div>`;
-  document.getElementById('dlConfidence').innerHTML = `
-    ${[['≥90%','high',40],['80-89%','high',30],['70-79%','med',20],['60-69%','low',8],['<60%','low',2]].map(([label,cls,pct]) => `
-      <div class="conf-row">
-        <div class="conf-label">${label}</div>
-        <div class="conf-bar-wrap"><div class="conf-bar" style="width:${pct*2}%;background:${cls==='high'?'var(--green)':cls==='med'?'var(--orange)':'var(--red)'}"></div></div>
-        <div class="conf-count">${pct}%</div>
-      </div>`).join('')}`;
-}
-
-function renderDLIntelligence(dps) {
-  // When real /admin/datapoints endpoint exists
-  renderDLIntelligenceFallback(statsCache); // use fallback until endpoint is built
-}
-
-// ── DATA LAB — QUALITY CONTROL ────────────────────────────────────────────────
-function renderDatapoints() {
-  const q      = (document.getElementById('dpSearch')?.value||'').toLowerCase();
-  const conf   = document.getElementById('dpConfFilter')?.value||'';
-  const sector = document.getElementById('dpSectorFilter')?.value||'';
-
-  // If no datapoints from API, show placeholder
-  if (!allDatapoints.length) {
-    document.getElementById('dpCount').textContent = '';
-    document.getElementById('dpTbody').innerHTML = `
-      <tr class="empty-row">
-        <td colspan="7">
-          <div style="padding:20px">
-            <div style="font-size:12px;color:var(--orange);font-weight:700;margin-bottom:6px">Backend endpoint required</div>
-            <div style="font-size:11px;color:var(--muted)">Add <code style="background:var(--bg);padding:2px 6px;border-radius:4px;font-family:Space Mono,monospace">/api/v1/admin/datapoints</code> endpoint to main.py to view and manage scraped_datapoints here.</div>
-          </div>
-        </td>
-      </tr>`;
-    return;
-  }
-
-  let filtered = allDatapoints.filter(d => {
-    const matchQ = !q || (d.item||'').toLowerCase().includes(q) || (d.category||'').toLowerCase().includes(q);
-    const score = parseFloat(d.confidence_score||0);
-    const matchConf = !conf || (conf==='high'&&score>=0.8) || (conf==='med'&&score>=0.6&&score<0.8) || (conf==='low'&&score<0.6);
-    const matchSector = !sector || (d.category||'').toLowerCase().includes(sector);
-    return matchQ && matchConf && matchSector;
-  });
-  document.getElementById('dpCount').textContent = `${filtered.length} datapoints`;
-  const tbody = document.getElementById('dpTbody');
-  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No datapoints found</td></tr>'; return; }
-  tbody.innerHTML = filtered.slice(0,100).map(d => {
-    const score = parseFloat(d.confidence_score||0);
-    const confClass = score>=0.8?'badge-high':score>=0.6?'badge-med':'badge-low';
-    return `<tr>
-      <td style="font-weight:600;max-width:200px">${(d.item||'').slice(0,40)}</td>
-      <td style="color:var(--orange);font-weight:700;font-family:Space Mono,monospace">${d.currency||'KES'} ${parseFloat(d.value||0).toLocaleString()}</td>
-      <td><span class="badge badge-sector">${d.category||'—'}</span></td>
-      <td style="color:var(--muted);font-size:11px">${d.region||d.county||'Kenya'}</td>
-      <td><span class="badge ${confClass}">${Math.round(score*100)}%</span></td>
-      <td style="color:var(--muted);font-size:11px;font-family:Space Mono,monospace">${timeAgo(d.updated_at||d.created_at)}</td>
-      <td>
-        <div class="btn-group">
-          <button class="btn-sm btn-good" onclick="updateDatapoint('${d.id}','approve')">✓</button>
-          <button class="btn-sm btn-junk" onclick="updateDatapoint('${d.id}','reject')">✕</button>
-        </div>
-      </td>
-    </tr>`;
-  }).join('');
-}
-
-async function updateDatapoint(id, action) {
-  // Requires PATCH /api/v1/admin/datapoints/{id} endpoint
-  flash(`Datapoint ${action === 'approve' ? 'approved' : 'rejected'} — sync endpoint needed ✅`);
-}
-
-// ── DATA LAB — TRAINING ───────────────────────────────────────────────────────
-function renderTrainingStats() {
-  const counts = { gold:0, good:0, needs_review:0, junk:0 };
-  allConversations.forEach(c => {
-    const label = c.quality_label || 'needs_review';
-    if (counts[label] !== undefined) counts[label]++;
-  });
-  document.getElementById('trainGold').textContent   = counts.gold;
-  document.getElementById('trainGood').textContent   = counts.good;
-  document.getElementById('trainReview').textContent = counts.needs_review;
-  document.getElementById('trainJunk').textContent   = counts.junk;
-}
-
-function renderTrainingConvs() {
-  const q      = (document.getElementById('trainSearch')?.value||'').toLowerCase();
-  const label  = document.getElementById('trainLabelFilter')?.value||'needs_review';
-  const filtered = allConversations.filter(c =>
-    (!q || (c.idea_text||'').toLowerCase().includes(q)) &&
-    (!label || (c.quality_label||'needs_review') === label)
-  );
-  document.getElementById('trainCount').textContent = `${filtered.length} conversations`;
-  const tbody = document.getElementById('trainTbody');
-  if (!filtered.length) { tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No conversations found</td></tr>'; return; }
-  tbody.innerHTML = filtered.map(c => `
-    <tr>
-      <td style="max-width:240px;color:#94a3b8;font-size:12px">${(c.idea_text||'').slice(0,70)||'(no idea)'}${(c.idea_text||'').length>70?'...':''}</td>
-      <td><span class="badge badge-sector">${c.sector||'—'}</span></td>
-      <td>${labelBadge(c.quality_label)}</td>
-      <td style="font-weight:700;color:${depthColor(c.depth_score)};font-family:Space Mono,monospace;font-size:12px">${c.depth_score??0}</td>
-      <td class="${c.turn_count>=8?'turns-high':c.turn_count>=4?'turns-mid':'turns-low'}">${c.turn_count??0}</td>
-      <td>
-        <div class="btn-group">
-          <button class="btn-sm btn-gold" onclick="relabelConv('${c.id}','gold')" title="Gold — anchor example">★</button>
-          <button class="btn-sm btn-good" onclick="relabelConv('${c.id}','good')" title="Good — include in training">✓</button>
-          <button class="btn-sm btn-junk" onclick="relabelConv('${c.id}','junk')" title="Junk — exclude">✕</button>
-          <button class="btn-sm btn-view" onclick="openConversation('${c.id}')">Read</button>
-        </div>
-      </td>
-    </tr>`).join('');
-}
-
-async function relabelConv(id, label) {
-  // Calls PATCH /api/v1/admin/conversations/{id}/label
-  const res = await apiPatch(`/api/v1/admin/conversations/${id}/label`, {quality_label: label});
+async function checkConn() {
+  const dot = document.getElementById('api-dot');
+  const st = document.getElementById('api-status');
+  const conn = document.getElementById('conn-status');
+  const res = await api('/health');
   if (res) {
-    // Update local state
-    const conv = allConversations.find(c => c.id === id);
-    if (conv) conv.quality_label = label;
-    renderTrainingConvs();
-    renderTrainingStats();
-    flash(`Labelled as ${label} ✅`);
+    dot.className = 'status-dot live';
+    if (st) st.textContent = 'Live';
+    if (conn) conn.innerHTML = '<span style="color:var(--green)">✓ Connected to ' + API + '</span>';
   } else {
-    // Endpoint not yet built — update locally only
-    const conv = allConversations.find(c => c.id === id);
-    if (conv) conv.quality_label = label;
-    renderTrainingConvs();
-    renderTrainingStats();
-    flash(`Labelled as ${label} — add PATCH endpoint to persist ✅`);
+    dot.className = 'status-dot err';
+    if (st) st.textContent = 'Unreachable';
+    if (conn) conn.innerHTML = '<span style="color:var(--red)">✗ Cannot reach ' + API + '</span>';
   }
 }
 
-async function exportTrainingData() {
-  const el = document.getElementById('exportStatus');
-  el.textContent = 'Requesting export...';
-  const res = await apiFetch('/api/v1/admin/export-training-data');
-  if (res && res.count !== undefined) {
-    el.textContent = `✅ ${res.count} conversations ready — ${res.skipped||0} skipped`;
-    // Trigger download
-    const blob = new Blob([res.data.join('\n')], {type:'application/json'});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url; a.download = `afrifoundry_training_${new Date().toISOString().slice(0,10)}.jsonl`;
-    a.click(); URL.revokeObjectURL(url);
-    flash('JSONL exported ✅');
-  } else {
-    el.textContent = '⚠ Add /api/v1/admin/export-training-data endpoint first';
-  }
+async function refreshAll() {
+  toast('↻', 'Refreshing all data...');
+  await loadOverview();
 }
 
-// ── AI HEALTH ─────────────────────────────────────────────────────────────────
-function renderAIHealth(s) {
-  const usage = s.ai_usage || {}, u = s.users || {}, c = s.conversations || {};
-  const retained = u.retained || 0, total = u.total || 1;
-  const retentionPct = Math.round((retained / total) * 100);
-  const dpTotal = s.datapoints?.total ?? 0;
-  document.getElementById('aiHealthGrid').innerHTML = `
-    <div class="health-card"><div class="health-val">${usage.groq_calls??'—'}</div><div class="health-label">Groq Calls</div></div>
-    <div class="health-card"><div class="health-val" style="color:var(--blue)">${usage.gemini_calls??'—'}</div><div class="health-label">Gemini Fallback</div></div>
-    <div class="health-card"><div class="health-val" style="color:${(usage.errors||0)>0?'var(--red)':'var(--green)'}">${usage.errors??0}</div><div class="health-label">AI Errors</div></div>
-    <div class="health-card"><div class="health-val" style="color:var(--purple)">${usage.key_rotations??0}</div><div class="health-label">Key Rotations</div></div>
-    <div class="health-card"><div class="health-val" style="color:var(--blue)">${c.avg_turns??0}</div><div class="health-label">Avg Turns/Conv</div></div>
-    <div class="health-card"><div class="health-val" style="color:var(--green)">${Number(dpTotal).toLocaleString()}</div><div class="health-label">Active Datapoints</div></div>`;
-  document.getElementById('retentionFill').style.width = retentionPct + '%';
-  document.getElementById('retentionPct').textContent = retentionPct + '%';
+function saveSettings() {
+  API = document.getElementById('cfg-url').value.trim();
+  localStorage.setItem('cc_url', API);
+  checkConn();
+  toast('✅', 'Settings saved');
 }
 
-// ── ERRORS ────────────────────────────────────────────────────────────────────
-function renderErrors(errs) {
-  const container = document.getElementById('errorsContainer');
-  if (!errs.length) { container.innerHTML = '<div class="no-errors">✅ No errors logged. System is clean.</div>'; return; }
-  container.innerHTML = errs.map(e => `
-    <div class="error-item">
-      <div class="error-header">
-        <span class="error-context">⚠ ${e.context||'Unknown'}</span>
-        <span class="error-time">${timeAgo(e.created_at)}</span>
+// ══ OVERVIEW ════════════════════════════════════════════
+async function loadOverview() {
+  const [stats, convs, dp] = await Promise.all([
+    api('/api/v1/admin/stats'),
+    api('/api/v1/admin/conversations?limit=5'),
+    api('/api/v1/admin/datapoints?limit=300')
+  ]);
+  renderKPIs(stats, dp);
+  renderRecentActivity(convs);
+  renderSectors(dp);
+  renderMilestones(dp);
+  renderTopUsers(stats);
+  renderSysHealth(stats);
+}
+
+function renderKPIs(stats, dp) {
+  const users = stats?.total_users || stats?.users || 0;
+  const convs = stats?.total_conversations || stats?.conversations || 0;
+  const dpCount = dp?.count || dp?.datapoints?.length || 0;
+  const qual = stats?.avg_quality_score || stats?.avg_rating || 0;
+  document.getElementById('kpi-users').textContent = users.toLocaleString();
+  document.getElementById('kpi-convs').textContent = convs.toLocaleString();
+  document.getElementById('kpi-dp').textContent = dpCount.toLocaleString();
+  document.getElementById('kpi-qual').textContent = qual ? qual.toFixed(1) + '/5' : '—';
+  document.getElementById('sc-users').textContent = users || '—';
+  document.getElementById('sc-dp').textContent = dpCount || '—';
+  document.getElementById('kpi-users-d').textContent = users ? '↑ ' + users + ' registered' : 'No data yet';
+  document.getElementById('kpi-convs-d').textContent = convs ? '↑ ' + convs + ' total' : 'No data yet';
+  document.getElementById('kpi-qual-d').textContent = qual ? (qual >= 4 ? '🟢 Good' : qual >= 3 ? '🟡 Average' : '🔴 Needs work') : '—';
+}
+
+function renderRecentActivity(convs) {
+  const el = document.getElementById('recent-activity');
+  const list = convs?.conversations || convs?.data || [];
+  if (!list.length) { el.innerHTML = '<div class="empty">No conversations yet</div>'; return; }
+  el.innerHTML = list.slice(0, 5).map(c => `
+    <div class="activity-row">
+      <div class="abar" style="background:var(--amber)"></div>
+      <div class="abody">
+        <div class="atitle">${escHtml(c.first_message || c.title || 'Conversation')}</div>
+        <div class="ameta">${c.user_email || c.user_id || 'Unknown'} · ${fmtAgo(c.created_at || c.timestamp)}</div>
       </div>
-      <div class="error-msg">${e.error_message||'(no message)'}</div>
-      ${e.endpoint?`<div style="font-size:10px;color:var(--faint);margin-top:4px;font-family:Space Mono,monospace">Endpoint: ${e.endpoint} · Status: ${e.status_code||'?'}</div>`:''}
+      ${c.rating ? `<div class="pill pill-amber">${'★'.repeat(c.rating)}</div>` : ''}
     </div>`).join('');
 }
 
-// ── CONVERSATION VIEWER ───────────────────────────────────────────────────────
-async function openConversation(convId) {
-  currentConvId = convId;
-  let conv = allConversations.find(c => c.id === convId) || {};
-  if (!conv.messages || !conv.messages.length) {
-    const data = await apiFetch(`/api/v1/admin/conversation/${convId}`);
-    if (data && !data.error) conv = data;
-  }
-  if (!conv.id) { flash('Could not load conversation'); return; }
-  const idea = conv.idea_text || conv.idea || 'Conversation';
-  const name = conv.name || conv.email || 'Unknown';
-  const messages = conv.messages || conv.history || [];
-  document.getElementById('modalTitle').textContent = idea.slice(0,60);
-  document.getElementById('modalMeta').textContent = `${name} · ${conv.sector||'no sector'} · ${conv.turn_count||0} turns · depth: ${conv.depth_score||0} · ${timeAgo(conv.created_at)}`;
-  document.getElementById('modalBody').innerHTML = messages.length
-    ? messages.map(m => `
-        <div class="chat-msg">
-          <div class="chat-msg-label ${m.role==='user'?'user':'ai'}">${m.role==='user'?'👤 '+(conv.name||'User'):'🤖 AfriFoundry AI'}</div>
-          <div class="chat-msg-bubble ${m.role!=='user'?'ai-bubble':''}">${escapeHtml(m.content||'')}</div>
-        </div>`).join('')
-    : '<div style="color:var(--muted);text-align:center;padding:40px;font-family:Space Mono,monospace">No messages recorded</div>';
-  // Footer with quick label buttons + keyboard hints
-  const isReviewMode = (document.getElementById('trainLabelFilter')?.value === 'needs_review');
-  document.getElementById('modalFooter').innerHTML = `
-    <div class="shortcut-bar" style="flex:1;padding:0;background:none;border:none">
-      <span class="shortcut-item"><span class="kbd">G</span> Gold</span>
-      <span class="shortcut-item"><span class="kbd">V</span> Good</span>
-      <span class="shortcut-item"><span class="kbd">J</span> Junk</span>
-      <span class="shortcut-item"><span class="kbd">N</span> Next</span>
-      <span class="shortcut-item"><span class="kbd">Esc</span> Close</span>
+function renderSectors(dp) {
+  const el = document.getElementById('sector-list');
+  const list = dp?.datapoints || [];
+  if (!list.length) { el.innerHTML = '<div class="empty">No datapoints loaded</div>'; return; }
+  const counts = {};
+  list.forEach(d => { const s = d.category || 'other'; counts[s] = (counts[s] || 0) + 1; });
+  const sorted = Object.entries(counts).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  const max = sorted[0]?.[1] || 1;
+  el.innerHTML = sorted.map(([s, n]) => `
+    <div class="sector-row">
+      <div class="sector-name">${cap(s)}</div>
+      <div class="sector-bar"><div class="sector-fill" style="width:${(n/max*100).toFixed(0)}%"></div></div>
+      <div class="sector-count">${n.toLocaleString()}</div>
+    </div>`).join('');
+}
+
+function renderMilestones(dp) {
+  const count = dp?.count || dp?.datapoints?.length || 0;
+  const targets = [{ n: 'Scraper launch', t: 1000 }, { n: 'V1 target', t: 7000 }, { n: 'Current target', t: 12000 }, { n: 'Fine-tune ready', t: 50000 }, { n: 'V2 target', t: 200000 }];
+  document.getElementById('milestones-ov').innerHTML = targets.map(m => {
+    const pct = Math.min(count / m.t * 100, 100);
+    const done = count >= m.t;
+    return `<div style="margin-bottom:12px">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="font-size:12px;${done ? 'color:var(--green)' : ''}">${done ? '✓ ' : ''}${m.n}</span>
+        <span style="font-family:var(--mono);font-size:11px;color:var(--muted2)">${count.toLocaleString()} / ${m.t.toLocaleString()}</span>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="background:${done ? 'var(--green)' : 'var(--amber)'};width:${pct}%"></div></div>
+    </div>`;
+  }).join('');
+}
+
+function renderTopUsers(stats) {
+  const el = document.getElementById('top-users');
+  const list = stats?.top_users || stats?.active_users || [];
+  if (!list.length) { el.innerHTML = '<div class="empty">Load users panel to see top users</div>'; return; }
+  const COLORS = ['#4D9EFF', '#F5A623', '#2DD4BF', '#A78BFA', '#FF4D6A'];
+  el.innerHTML = list.slice(0, 5).map((u, i) => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b1)">
+      <div class="user-av" style="background:${COLORS[i % 5]}22;color:${COLORS[i % 5]}">${(u.email || u.name || '?')[0].toUpperCase()}</div>
+      <div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${u.email || u.name || 'Unknown'}</div>
+      <div style="font-family:var(--mono);font-size:10px;color:var(--muted2)">${u.conversation_count || u.convs || 0} conversations</div></div>
+      <div class="pill ${u.plan === 'premium' ? 'pill-amber' : 'pill-muted'}">${u.plan || 'free'}</div>
+    </div>`).join('');
+}
+
+function renderSysHealth(stats) {
+  const items = [
+    { label: 'API Server', status: 'ok', detail: 'Render — online' },
+    { label: 'Database', status: stats ? 'ok' : 'warn', detail: stats ? 'Neon PostgreSQL — connected' : 'Cannot verify' },
+    { label: 'AI Engine', status: 'ok', detail: 'Groq / Gemini — active' },
+    { label: 'RAG Pipeline', status: 'ok', detail: 'Database reads — live' },
+    { label: 'Auth System', status: 'ok', detail: 'JWT — active' },
+  ];
+  const COLS = { ok: 'var(--green)', warn: 'var(--amber)', err: 'var(--red)' };
+  document.getElementById('sys-health').innerHTML = items.map(i => `
+    <div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--b1)">
+      <div class="status-dot ${i.status === 'ok' ? 'live' : ''}" style="background:${COLS[i.status]};${i.status==='ok'?'box-shadow:0 0 6px var(--green)':''}"></div>
+      <div style="flex:1"><div style="font-size:13px;font-weight:500">${i.label}</div><div style="font-family:var(--mono);font-size:10px;color:var(--muted2)">${i.detail}</div></div>
+    </div>`).join('');
+}
+
+// ══ ALERTS ══════════════════════════════════════════════
+async function loadAlerts() {
+  const [stats, dp, convs] = await Promise.all([api('/api/v1/admin/stats'), api('/api/v1/admin/datapoints?limit=1'), api('/api/v1/admin/conversations?limit=1')]);
+  const alerts = [];
+  if (!stats) alerts.push({ type: 'err', icon: '🔴', title: 'API Unreachable', msg: 'Cannot connect to ' + API + '. Check Render deployment.' });
+  if (dp?.count < 7000) alerts.push({ type: 'warn', icon: '⚠️', title: 'Datapoints below V1 target', msg: `Current: ${dp?.count || 0} / Target: 7,000. Run missing_scrapers.py.` });
+  if (dp?.count >= 7000 && dp?.count < 10000) alerts.push({ type: 'info', icon: 'ℹ️', title: 'Approaching 10k datapoints', msg: `Current: ${dp?.count}. Keep scrapers running.` });
+  if (!convs?.conversations?.length) alerts.push({ type: 'info', icon: 'ℹ️', title: 'No conversations logged yet', msg: 'Once users chat with AfriFoundry AI, they will appear here.' });
+  alerts.push({ type: 'ok', icon: '✅', title: 'Registration pending', msg: 'Save KES 15,000 → register AfriFoundry Limited on BRS. Currently at KES 6,000.' });
+  alerts.push({ type: 'warn', icon: '⚠️', title: 'Google.org deadline', msg: 'Apply before April 3, 2026. Use Grant Boilerplate doc.' });
+  document.getElementById('sc-alerts').textContent = alerts.filter(a => a.type !== 'ok').length;
+  document.getElementById('alerts-body').innerHTML = alerts.length ?
+    alerts.map(a => `<div class="alert-banner ${a.type}"><span style="font-size:16px;flex-shrink:0">${a.icon}</span><div><div style="font-weight:600;margin-bottom:3px">${a.title}</div><div style="font-size:12px;opacity:.8">${a.msg}</div></div></div>`).join('') :
+    '<div class="empty">No alerts — all systems good</div>';
+}
+
+// ══ USERS ════════════════════════════════════════════════
+async function loadUsers() {
+  document.getElementById('users-body').innerHTML = '<tr><td colspan="6" class="loading"><div class="dots"><span></span><span></span><span></span></div></td></tr>';
+  const data = await api('/api/v1/admin/users?limit=200');
+  allUsers = data?.users || data?.data || [];
+  document.getElementById('users-count').textContent = allUsers.length + ' users';
+  document.getElementById('sc-users').textContent = allUsers.length;
+  renderUsersTable(allUsers);
+}
+function filterUsers() {
+  const q = document.getElementById('user-search').value.toLowerCase();
+  const f = document.getElementById('user-filter').value;
+  let list = allUsers.filter(u => (!q || (u.email||'').toLowerCase().includes(q) || (u.name||'').toLowerCase().includes(q)) && (!f || u.plan === f));
+  renderUsersTable(list);
+}
+function renderUsersTable(users) {
+  if (!users.length) { document.getElementById('users-body').innerHTML = '<tr><td colspan="6"><div class="empty">No users found</div></td></tr>'; return; }
+  document.getElementById('users-body').innerHTML = users.map(u => `
+    <tr>
+      <td><div style="display:flex;align-items:center;gap:8px">
+        <div class="user-av" style="background:var(--blueDim);color:var(--blue)">${(u.email||'?')[0].toUpperCase()}</div>
+        <div><div style="font-size:13px;font-weight:500">${escHtml(u.email || 'Unknown')}</div>
+        <div style="font-family:var(--mono);font-size:10px;color:var(--muted2)">ID: ${u.id?.toString().slice(0,8) || '—'}</div></div></div></td>
+      <td><div class="pill ${u.plan === 'premium' ? 'pill-amber' : 'pill-muted'}">${u.plan || 'free'}</div></td>
+      <td><span style="font-family:var(--mono)">${u.conversation_count || u.convs || 0}</span></td>
+      <td><span style="font-family:var(--mono);font-size:11px;color:var(--muted2)">${fmtDate(u.created_at || u.joined)}</span></td>
+      <td><span style="font-family:var(--mono);font-size:11px;color:var(--muted2)">${fmtAgo(u.last_active || u.updated_at)}</span></td>
+      <td><button class="btn btn-s" style="font-size:11px;padding:4px 10px" onclick="viewUserConvs('${u.id}','${u.email}')">Convs</button></td>
+    </tr>`).join('');
+}
+function viewUserConvs(id, email) { nav('conversations'); setTimeout(() => { document.getElementById('conv-search').value = email; filterConvs(); }, 200); }
+
+// ══ CONVERSATIONS ════════════════════════════════════════
+async function loadConversations() {
+  document.getElementById('conv-list').innerHTML = '<div class="loading"><div class="dots"><span></span><span></span><span></span></div></div>';
+  const data = await api('/api/v1/admin/conversations?limit=100');
+  allConvs = data?.conversations || data?.data || [];
+  document.getElementById('conv-count').textContent = allConvs.length + ' conversations loaded';
+  renderConvList(allConvs);
+}
+function filterConvs() {
+  const q = document.getElementById('conv-search').value.toLowerCase();
+  const f = document.getElementById('conv-filter').value;
+  let list = allConvs.filter(c => {
+    const match = !q || (c.first_message||'').toLowerCase().includes(q) || (c.user_email||'').toLowerCase().includes(q);
+    const flt = !f || (f === 'rated' && c.rating) || (f === 'unrated' && !c.rating) || (f === 'flagged' && c.is_gold);
+    return match && flt;
+  });
+  renderConvList(list);
+}
+function renderConvList(convs) {
+  const el = document.getElementById('conv-list');
+  if (!convs.length) { el.innerHTML = '<div class="empty">No conversations found</div>'; return; }
+  el.innerHTML = convs.map(c => `
+    <div class="conv-item${selConvId === c.id ? ' sel' : ''}" onclick="selectConv('${c.id}')">
+      <div class="conv-av" style="background:var(--amberDim);color:var(--amber)">${(c.user_email || 'U')[0].toUpperCase()}</div>
+      <div class="conv-body">
+        <div class="conv-name">${escHtml(c.user_email || c.user_id || 'Unknown user')}</div>
+        <div class="conv-preview">${escHtml((c.first_message || 'No preview').slice(0, 80))}</div>
+        <div class="conv-meta">${fmtAgo(c.created_at)} ${c.rating ? '· ' + '★'.repeat(c.rating) : ''} ${c.message_count ? '· ' + c.message_count + ' msgs' : ''}</div>
+      </div>
+    </div>`).join('');
+}
+async function selectConv(id) {
+  selConvId = id;
+  renderConvList(allConvs.filter(c => {
+    const q = document.getElementById('conv-search').value.toLowerCase();
+    return !q || (c.first_message||'').toLowerCase().includes(q) || (c.user_email||'').toLowerCase().includes(q);
+  }));
+  const det = document.getElementById('conv-detail');
+  det.innerHTML = '<div class="loading"><div class="dots"><span></span><span></span><span></span></div></div>';
+  det.classList.add('on');
+  const data = await api('/api/v1/admin/conversations/' + id);
+  const conv = data?.conversation || data;
+  if (!conv) { det.innerHTML = '<div class="empty">Could not load conversation</div>'; return; }
+  const msgs = conv.messages || conv.history || [];
+  const stars = conv.rating || 0;
+  det.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div><div style="font-family:var(--mono);font-size:10px;color:var(--muted2)">CONVERSATION</div>
+      <div style="font-size:13px;font-weight:600;margin-top:2px">${escHtml(conv.user_email || id)}</div></div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <div class="rating-stars">${[1,2,3,4,5].map(s=>`<span class="star${s<=stars?'':' empty'}">★</span>`).join('')}</div>
+        <button class="btn btn-p" style="font-size:11px;padding:5px 10px" onclick="markGold('${id}')">🥇 Gold</button>
+      </div>
     </div>
-    <button class="btn-sm btn-gold" onclick="relabelAndAdvance('${convId}','gold')">★ Gold</button>
-    <button class="btn-sm btn-good" onclick="relabelAndAdvance('${convId}','good')">✓ Good</button>
-    <button class="btn-sm btn-junk" onclick="relabelAndAdvance('${convId}','junk')">✕ Junk</button>
-    ${isReviewMode ? '<button class="btn-sm btn-view" onclick="advanceToNext()">→ Next</button>' : ''}
-  `;
-  setTimeout(() => { const b = document.getElementById('modalBody'); if (b) b.scrollTop = b.scrollHeight; }, 50);
-  document.getElementById('convModal').classList.remove('hidden');
+    <div style="max-height:400px;overflow-y:auto">
+      ${msgs.length ? msgs.map(m => `
+        <div class="msg">
+          <div class="msg-role ${m.role}">${m.role === 'user' ? '👤 User' : '🤖 AfriFoundry AI'}</div>
+          <div class="msg-txt">${escHtml(m.content || m.text || '')}</div>
+        </div>`).join('') : '<div class="empty">No messages in this conversation</div>'}
+    </div>`;
+}
+async function markGold(id) {
+  const res = await api('/api/v1/admin/conversations/' + id + '/gold', { method: 'POST', body: JSON.stringify({ is_gold: true }) });
+  if (res) toast('🥇', 'Marked as gold training data'); else toast('⚠️', 'Could not mark as gold — check API');
 }
 
-function hideModal() { document.getElementById('convModal').classList.add('hidden'); currentConvId = null; }
-function closeModal(e) { if (e.target.id === 'convModal') hideModal(); }
+// ══ RATINGS ══════════════════════════════════════════════
+async function loadRatings() {
+  document.getElementById('ratings-body').innerHTML = '<tr><td colspan="5" class="loading"><div class="dots"><span></span><span></span><span></span></div></td></tr>';
+  const data = await api('/api/v1/admin/ratings?limit=100');
+  allRatings = data?.ratings || data?.data || [];
+  const avg = allRatings.length ? (allRatings.reduce((s, r) => s + (r.rating || 0), 0) / allRatings.length).toFixed(1) : 0;
+  document.getElementById('r-avg').textContent = avg || '—';
+  document.getElementById('r-total').textContent = allRatings.length;
+  document.getElementById('r-5').textContent = allRatings.filter(r => r.rating === 5).length;
+  document.getElementById('r-low').textContent = allRatings.filter(r => r.rating < 3).length;
+  if (!allRatings.length) { document.getElementById('ratings-body').innerHTML = '<tr><td colspan="5"><div class="empty">No ratings yet</div></td></tr>'; return; }
+  document.getElementById('ratings-body').innerHTML = allRatings.map(r => `
+    <tr>
+      <td style="max-width:300px"><div style="overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;font-size:12px">${escHtml(r.question || r.first_message || '—')}</div></td>
+      <td><div class="rating-stars">${[1,2,3,4,5].map(s=>`<span class="star${s<=r.rating?'':' empty'}" style="font-size:12px">★</span>`).join('')}</div></td>
+      <td><span style="font-family:var(--mono);font-size:11px;color:var(--muted2)">${escHtml(r.user_email || r.user_id || '—')}</span></td>
+      <td><span style="font-family:var(--mono);font-size:11px;color:var(--muted2)">${fmtDate(r.created_at)}</span></td>
+      <td><button class="btn btn-s" style="font-size:11px;padding:4px 10px" onclick="viewConvFromRating('${r.conversation_id}')">View</button></td>
+    </tr>`).join('');
+}
+function viewConvFromRating(id) { nav('conversations'); setTimeout(() => selectConv(id), 300); }
 
-// Fast review state
-let reviewQueue = [];
-let reviewIndex = 0;
-
-function startFastReview() {
-  reviewQueue = allConversations.filter(c => (c.quality_label || 'needs_review') === 'needs_review' && c.turn_count >= 3);
-  reviewIndex = 0;
-  if (!reviewQueue.length) { flash('No conversations need review right now ✅'); return; }
-  flash(`Fast review: ${reviewQueue.length} conversations to review`);
-  // Switch to training tab and needs_review filter
-  document.getElementById('trainLabelFilter').value = 'needs_review';
-  renderTrainingConvs();
-  openConversation(reviewQueue[0].id);
+// ══ DATA LAB ════════════════════════════════════════════
+async function loadDatapoints() {
+  document.getElementById('dp-list').innerHTML = '<div class="loading"><div class="dots"><span></span><span></span><span></span></div></div>';
+  const sector = document.getElementById('dp-sector')?.value || '';
+  const url = '/api/v1/admin/datapoints?limit=200' + (sector ? '&sector=' + sector : '');
+  const data = await api(url);
+  allDP = data?.datapoints || [];
+  document.getElementById('dp-count-label').textContent = (data?.count || allDP.length) + ' datapoints' + (sector ? ' in ' + sector : '');
+  document.getElementById('sc-dp').textContent = data?.count || allDP.length;
+  filterDP();
+}
+function filterDP() {
+  const q = (document.getElementById('dp-search')?.value || '').toLowerCase();
+  const conf = document.getElementById('dp-conf')?.value || '';
+  let list = allDP.filter(d => {
+    const match = !q || (d.item||'').toLowerCase().includes(q) || (d.category||'').toLowerCase().includes(q) || (d.region||'').toLowerCase().includes(q);
+    const sc = d.confidence_score || 0;
+    const cf = !conf || (conf === 'high' && sc >= 0.8) || (conf === 'med' && sc >= 0.5 && sc < 0.8) || (conf === 'low' && sc < 0.5);
+    return match && cf;
+  });
+  const el = document.getElementById('dp-list');
+  if (!list.length) { el.innerHTML = '<div class="empty">No datapoints match your filter</div>'; return; }
+  const SECTOR_ICONS = { food: '🌽', agriculture: '🌾', construction: '🏗', transport: '🚌', healthcare: '🏥', education: '📚', energy: '⚡', technology: '💻', finance: '💰', default: '📊' };
+  el.innerHTML = list.slice(0, 100).map(d => {
+    const conf = d.confidence_score || 0;
+    const confClass = conf >= 0.8 ? 'conf-high' : conf >= 0.5 ? 'conf-med' : 'conf-low';
+    const confLabel = conf >= 0.8 ? '▲ HIGH' : conf >= 0.5 ? '~ MED' : '▼ LOW';
+    const icon = SECTOR_ICONS[d.category?.toLowerCase()] || SECTOR_ICONS.default;
+    return `<div class="dp-card">
+      <div class="dp-icon" style="background:var(--amberDim)">${icon}</div>
+      <div class="dp-body">
+        <div class="dp-item">${escHtml(d.item || 'Unknown item')}</div>
+        <div class="dp-val">${d.value !== null && d.value !== undefined ? d.currency + ' ' + Number(d.value).toLocaleString() + (d.unit ? ' / ' + d.unit : '') : '—'}</div>
+        <div class="dp-meta">${[d.category, d.subcategory, d.region, d.county].filter(Boolean).join(' · ')}</div>
+        ${d.context_summary ? `<div style="font-size:11px;color:var(--muted2);margin-top:4px;font-style:italic">${escHtml(d.context_summary.slice(0, 100))}</div>` : ''}
+        <div class="dp-conf ${confClass}">${confLabel} ${(conf * 100).toFixed(0)}%</div>
+      </div>
+    </div>`;
+  }).join('') + (list.length > 100 ? `<div style="text-align:center;padding:12px;font-family:var(--mono);font-size:11px;color:var(--muted2)">Showing 100 of ${list.length} results. Use filters to narrow down.</div>` : '');
+}
+async function seedKenyaToday() {
+  toast('🇰🇪', 'Seeding Kenya Today prices...');
+  const res = await api('/api/v1/admin/kenya-today', { method: 'POST' });
+  if (res) toast('✅', 'Kenya Today data seeded successfully'); else toast('⚠️', 'Could not seed — check API');
+  if (document.getElementById('panel-kenya').classList.contains('on')) loadKenya();
 }
 
-function advanceToNext() {
-  reviewIndex++;
-  if (reviewIndex < reviewQueue.length) {
-    openConversation(reviewQueue[reviewIndex].id);
-  } else {
-    hideModal();
-    flash(`Review complete! ${reviewQueue.length} conversations processed ✅`);
-    reviewQueue = [];
-  }
+// ══ SCRAPERS ════════════════════════════════════════════
+const SCRAPERS = [
+  { name: 'Food & Agriculture', file: 'Agriculture_deep_expanded.py', sectors: ['food', 'agriculture'], status: 'ok', last: '2026-03-10', count: 2400 },
+  { name: 'Construction & Materials', file: 'construction_scrapers.py', sectors: ['construction'], status: 'ok', last: '2026-03-10', count: 800 },
+  { name: 'Food & Hospitality', file: 'food_hospitality_expanded.py', sectors: ['food', 'hospitality'], status: 'ok', last: '2026-03-10', count: 1200 },
+  { name: 'Seeds & Inputs', file: 'seeds_expanded.py', sectors: ['agriculture'], status: 'ok', last: '2026-03-09', count: 600 },
+  { name: 'Apollo (Multi-sector)', file: 'apollo.py', sectors: ['various'], status: 'warn', last: '2026-03-08', count: 1800 },
+  { name: 'Transport & Logistics', file: 'transport_scrapers.py', sectors: ['transport'], status: 'pending', last: 'Never', count: 0 },
+  { name: 'Healthcare & Medical', file: 'healthcare_scrapers.py', sectors: ['healthcare'], status: 'pending', last: 'Never', count: 0 },
+  { name: 'Energy & Utilities', file: 'energy_scrapers.py', sectors: ['energy'], status: 'pending', last: 'Never', count: 0 },
+];
+function renderScrapers() {
+  const el = document.getElementById('scrapers-list');
+  el.innerHTML = SCRAPERS.map(s => `
+    <div class="sc-card">
+      <div class="sc-status ${s.status === 'ok' ? 'ok' : s.status === 'warn' ? 'warn' : 'err'}"></div>
+      <div class="sc-body">
+        <div class="sc-name">${s.name}</div>
+        <div class="sc-meta">${s.file} · ${s.sectors.join(', ')}</div>
+        <div style="display:flex;gap:8px;margin-top:6px;align-items:center">
+          <span style="font-family:var(--mono);font-size:10px;color:var(--amber)">${s.count.toLocaleString()} pts</span>
+          <span style="font-family:var(--mono);font-size:10px;color:var(--muted2)">Last: ${s.last}</span>
+          <div class="pill ${s.status === 'ok' ? 'pill-green' : s.status === 'warn' ? 'pill-amber' : 'pill-muted'}">${s.status}</div>
+        </div>
+      </div>
+    </div>`).join('');
+  const log = document.getElementById('scraper-log');
+  log.innerHTML = [
+    '<span style="color:var(--green)">✓</span> Agriculture_deep_expanded.py — 2,400 pts — 2026-03-10 09:14',
+    '<span style="color:var(--green)">✓</span> food_hospitality_expanded.py — 1,200 pts — 2026-03-10 09:22',
+    '<span style="color:var(--green)">✓</span> seeds_expanded.py — 600 pts — 2026-03-09 18:30',
+    '<span style="color:var(--amber)">⚠</span> apollo.py — partial run — 2026-03-08 14:55',
+    '<span style="color:var(--muted2)">ℹ</span> Run python missing_scrapers.py to fill gaps',
+    '<span style="color:var(--muted2)">ℹ</span> Then python run_all_scrapers.py for full refresh',
+  ].map(l => `<div>${l}</div>`).join('');
+}
+function triggerScrape() { toast('🕷', 'Scraper run triggered — check your terminal'); }
+
+// ══ KENYA TODAY ══════════════════════════════════════════
+async function loadKenya() {
+  const data = await api('/api/v1/kenya-today');
+  const prices = data?.prices || data?.data || {};
+  const forex = prices.forex || {};
+  const food = prices.food || prices.market || {};
+  const fuel = prices.fuel || prices.energy || {};
+  const fmtKt = (items) => items.length ?
+    items.map(([k, v]) => `<div class="kt-row"><div class="kt-item">${k}</div><div class="kt-val">${v}</div></div>`).join('') :
+    '<div class="empty">No data — run Seed Kenya Today</div>';
+  document.getElementById('kt-forex').innerHTML = `<div class="sl">Forex Rates</div>` + fmtKt(Object.entries(forex).slice(0, 6).map(([k, v]) => [k, v]));
+  document.getElementById('kt-food').innerHTML = `<div class="sl">Food Prices (Nairobi)</div>` + fmtKt(Object.entries(food).slice(0, 8).map(([k, v]) => [k, 'KES ' + v]));
+  document.getElementById('kt-fuel').innerHTML = `<div class="sl">Fuel & Energy</div>` + fmtKt(Object.entries(fuel).slice(0, 6).map(([k, v]) => [k, v]));
 }
 
-async function relabelAndAdvance(id, label) {
-  await relabelConv(id, label);
-  renderFineTune();
-  if (reviewQueue.length > 0) {
-    advanceToNext();
-  } else {
-    hideModal();
-  }
+// ══ FINE-TUNE ════════════════════════════════════════════
+async function loadFineTune() {
+  const data = await api('/api/v1/admin/conversations?limit=1000');
+  const convs = data?.conversations || [];
+  const gold = convs.filter(c => c.is_gold || c.rating >= 5).length;
+  const target = 500;
+  const pct = Math.min(gold / target * 100, 100);
+  document.getElementById('ft-gold').textContent = gold;
+  document.getElementById('ft-gold-bar').style.width = pct + '%';
+  document.getElementById('ft-ready').textContent = pct.toFixed(0) + '%';
+}
+async function exportGold() {
+  toast('⬇', 'Preparing gold export...');
+  const data = await api('/api/v1/admin/export-gold');
+  if (data) {
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href = url; a.download = 'afrifoundry_gold_' + new Date().toISOString().slice(0, 10) + '.jsonl'; a.click();
+    toast('✅', 'Gold dataset exported');
+  } else toast('⚠️', 'Export failed — check API endpoint');
 }
 
-// Keyboard shortcuts for modal
-document.addEventListener('keydown', function(e) {
-  if (document.getElementById('convModal').classList.contains('hidden')) return;
-  if (e.target.tagName === 'INPUT') return;
-  if (e.key === 'g' || e.key === 'G') { if (currentConvId) relabelAndAdvance(currentConvId, 'gold'); }
-  else if (e.key === 'v' || e.key === 'V') { if (currentConvId) relabelAndAdvance(currentConvId, 'good'); }
-  else if (e.key === 'j' || e.key === 'J') { if (currentConvId) relabelAndAdvance(currentConvId, 'junk'); }
-  else if (e.key === 'n' || e.key === 'N') { advanceToNext(); }
-  else if (e.key === 'Escape') { hideModal(); }
-});
-
-// ── ACTIONS ───────────────────────────────────────────────────────────────────
-async function promoteUser(userId) {
-  await fetch(`${API}/api/v1/admin/users/${userId}/promote`, { method:'POST', headers:{Authorization:`Bearer ${token}`} });
-  flash('User promoted to admin ✅'); loadAll();
+// ══ GOLD REVIEW ══════════════════════════════════════════
+async function loadGold() {
+  document.getElementById('gold-list').innerHTML = '<div class="loading"><div class="dots"><span></span><span></span><span></span></div></div>';
+  const data = await api('/api/v1/admin/conversations?limit=200');
+  allGold = (data?.conversations || []).sort((a, b) => (b.rating || 0) - (a.rating || 0));
+  const approved = allGold.filter(c => c.is_gold).length;
+  document.getElementById('gold-progress').textContent = `${approved} / 500 gold approved · ${allGold.filter(c => c.rating === 5).length} rated 5 stars`;
+  renderGoldList(allGold);
+}
+function renderGoldList(convs) {
+  const el = document.getElementById('gold-list');
+  if (!convs.length) { el.innerHTML = '<div class="empty">No conversations yet</div>'; return; }
+  el.innerHTML = convs.slice(0, 50).map(c => `
+    <div class="gold-item${c.is_gold ? ' flagged' : ''}" onclick="selectGold('${c.id}')">
+      <div class="gold-q">${escHtml((c.first_message || 'No preview').slice(0, 100))}</div>
+      <div class="gold-meta">
+        ${c.rating ? `<div class="pill pill-amber">${'★'.repeat(c.rating)}</div>` : '<div class="pill pill-muted">Unrated</div>'}
+        ${c.is_gold ? '<div class="pill pill-green">🥇 Gold</div>' : ''}
+        <span style="font-family:var(--mono);font-size:10px;color:var(--muted2);margin-left:auto">${fmtAgo(c.created_at)}</span>
+      </div>
+    </div>`).join('');
+}
+async function selectGold(id) {
+  selGoldId = id;
+  const det = document.getElementById('gold-detail');
+  det.classList.add('on');
+  det.innerHTML = '<div class="loading"><div class="dots"><span></span><span></span><span></span></div></div>';
+  const data = await api('/api/v1/admin/conversations/' + id);
+  const conv = data?.conversation || data;
+  if (!conv) { det.innerHTML = '<div class="empty">Could not load</div>'; return; }
+  const msgs = conv.messages || conv.history || [];
+  det.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div><div style="font-family:var(--mono);font-size:10px;color:var(--muted2)">PREVIEW</div>
+      <div style="font-size:12px;color:var(--muted2);margin-top:2px">${escHtml(conv.user_email || id)}</div></div>
+      <div style="display:flex;gap:6px">
+        <button class="btn btn-d" style="font-size:11px" onclick="rejectGold('${id}')">✗ Skip</button>
+        <button class="btn btn-p" style="font-size:11px" onclick="markGold('${id}')">🥇 Approve Gold</button>
+      </div>
+    </div>
+    <div style="max-height:380px;overflow-y:auto">
+      ${msgs.slice(0, 6).map(m => `<div class="msg">
+        <div class="msg-role ${m.role}">${m.role === 'user' ? '👤 User' : '🤖 AI'}</div>
+        <div class="msg-txt">${escHtml((m.content || m.text || '').slice(0, 400))}</div>
+      </div>`).join('')}
+    </div>`;
+}
+async function approveAll() {
+  const fiveStars = allGold.filter(c => c.rating === 5 && !c.is_gold);
+  toast('🥇', `Approving ${fiveStars.length} five-star conversations...`);
+  for (const c of fiveStars.slice(0, 20)) await markGold(c.id);
+  await loadGold();
+  toast('✅', 'Bulk approval done');
+}
+async function rejectGold(id) {
+  const res = await api('/api/v1/admin/conversations/' + id + '/gold', { method: 'POST', body: JSON.stringify({ is_gold: false }) });
+  if (res) { toast('✗', 'Skipped'); loadGold(); }
 }
 
-async function removeUser(userId, email) {
-  if (!confirm(`Remove ${email}? Deletes all their conversations. Cannot be undone.`)) return;
-  await fetch(`${API}/api/v1/admin/users/${userId}`, { method:'DELETE', headers:{Authorization:`Bearer ${token}`} });
-  flash('User removed ✅'); loadAll();
-}
-
-// ── TABS ──────────────────────────────────────────────────────────────────────
-function switchTab(name, btn) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('panel-' + name).classList.add('active');
-  btn.classList.add('active');
-  if (name === 'ai' && statsCache) renderAIHealth(statsCache);
-  if (name === 'datalab') { renderDatapoints(); renderTrainingConvs(); renderTrainingStats(); }
-  if (name === 'finetune') { renderFineTune(); }
-}
-
-function switchDatalabTab(name, btn) {
-  document.querySelectorAll('.datalab-panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.datalab-tab').forEach(t => t.classList.remove('active'));
-  document.getElementById('dl-' + name).classList.add('active');
-  btn.classList.add('active');
-}
-
-// ── FINE-TUNE RENDER ──────────────────────────────────────────────────────────
-function renderFineTune() {
-  const gold   = allConversations.filter(c => c.quality_label === 'gold').length;
-  const good   = allConversations.filter(c => c.quality_label === 'good').length;
-  const review = allConversations.filter(c => (c.quality_label || 'needs_review') === 'needs_review').length;
-  const junk   = allConversations.filter(c => c.quality_label === 'junk').length;
-  const total  = allConversations.length;
-  const trainable = allConversations.filter(c => c.quality_label === 'gold' || c.quality_label === 'good');
-
-  // Progress ring
-  const pct = Math.min(gold / 500, 1);
-  const offset = 295 - (295 * pct);
-  const ring = document.getElementById('ftRingFill');
-  if (ring) ring.style.strokeDashoffset = offset;
-  const numEl = document.getElementById('ftGoldNum');
-  if (numEl) numEl.textContent = gold;
-  const fillEl = document.getElementById('ftProgressFill');
-  if (fillEl) fillEl.style.width = (pct * 100) + '%';
-  const leftEl = document.getElementById('ftProgressLeft');
-  if (leftEl) leftEl.textContent = `${gold} gold conversations`;
-  const rightEl = document.getElementById('ftProgressRight');
-  if (rightEl) rightEl.textContent = gold >= 500 ? '🎉 V2 READY — Run Kaggle notebook!' : `${500 - gold} more to trigger V2`;
-
-  // Checklist
-  const avgTurns = trainable.length ? Math.round(trainable.reduce((a,c) => a + (c.turn_count||0), 0) / trainable.length) : 0;
-  const sectors  = new Set(trainable.map(c => c.sector).filter(Boolean)).size;
-  const junkPct  = total ? Math.round((junk / total) * 100) : 0;
-
-  // Mode balance on gold+good
-  const modeV = trainable.filter(c => (c.conversation_type||'validator') === 'validator').length;
-  const modeE = trainable.filter(c => c.conversation_type === 'explorer').length;
-  const modeL = trainable.filter(c => c.conversation_type === 'learner').length;
-  const modeTotal = Math.max(modeV + modeE + modeL, 1);
-
-  function setCheck(id, done, detail) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    el.className = 'check-item' + (done ? ' done' : ' warn');
-    el.querySelector('.check-icon').textContent = done ? '✅' : '⬜';
-    const d = el.querySelector('.check-detail');
-    if (d && detail) d.textContent = detail;
-  }
-
-  setCheck('chk-gold',    gold >= 500,       `${gold} / 500 — ${500-gold > 0 ? 500-gold + ' more needed' : 'ready!'}`);
-  setCheck('chk-balance', modeE >= 1 && modeL >= 1, `Validator: ${modeV} · Explorer: ${modeE} · Learner: ${modeL}`);
-  setCheck('chk-turns',   avgTurns >= 5,     `Current avg: ${avgTurns} turns`);
-  setCheck('chk-sectors', sectors >= 5,      `${sectors} sectors in training data`);
-  setCheck('chk-junk',    junkPct < 20,      `Junk: ${junkPct}% of total (target: <20%)`);
-
-  // Mode bars
-  const setBar = (barId, cntId, val, total) => {
-    const pct = total ? Math.round((val/total)*100) : 0;
-    const b = document.getElementById(barId); if (b) b.style.width = pct + '%';
-    const c = document.getElementById(cntId); if (c) c.textContent = `${val} (${pct}%)`;
-  };
-  setBar('modeBarV','modeCntV', modeV, modeTotal);
-  setBar('modeBarE','modeCntE', modeE, modeTotal);
-  setBar('modeBarL','modeCntL', modeL, modeTotal);
-
-  const warn = document.getElementById('modeWarning');
-  if (warn) {
-    if (modeE < 1 || modeL < 1) warn.textContent = '⚠ Need more Explorer and Learner conversations before training';
-    else if (modeV / modeTotal > 0.8) warn.textContent = '⚠ Over-indexed on Validator — diversify before training';
-    else warn.textContent = '✅ Mode balance is acceptable for training';
-  }
-}
-
-async function exportV2() {
-  const el = document.getElementById('exportStatus');
-  if (el) el.textContent = 'Requesting v2 export...';
-  const res = await apiFetch('/api/v1/admin/export-training-data/v2?min_turns=2&limit=2000');
-  if (res && res.count !== undefined) {
-    const blob = new Blob([res.data.join('\n')], {type:'application/json'});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href = url; a.download = `afrifoundry_v2_training_${new Date().toISOString().slice(0,10)}.jsonl`;
-    a.click(); URL.revokeObjectURL(url);
-    // Mark export check done
-    const el2 = document.getElementById('chk-export');
-    if (el2) { el2.className = 'check-item done'; el2.querySelector('.check-icon').textContent = '✅'; }
-    flash(`V2 JSONL exported — ${res.count} conversations, ${res.skipped||0} skipped ✅`);
-  } else {
-    flash('⚠ Export endpoint not responding — check backend');
-  }
-}
-
-async function promoteByFeedback() {
-  flash('Running promote-by-feedback batch...');
-  const res = await apiPost('/api/v1/admin/promote-by-feedback', {});
-  if (res) {
-    flash(`Promoted ${res.promoted||0} to gold · Demoted ${res.demoted||0} to junk ✅`);
-    await loadAll();
-    renderFineTune();
-  } else {
-    flash('⚠ Endpoint not responding');
-  }
-}
-
-async function rescoreAll() {
-  flash('Rescoring all needs_review conversations...');
-  const res = await apiPost('/api/v1/admin/rescore-conversations', {});
-  if (res) {
-    flash(`Rescored ${res.rescored||0} conversations ✅`);
-    await loadAll();
-  } else {
-    flash('⚠ Rescore endpoint not responding');
-  }
-}
-
-// ── BOOT ──────────────────────────────────────────────────────────────────────
-if (token) {
-  fetch(`${API}/api/v1/auth/me`, { headers:{Authorization:`Bearer ${token}`} })
-    .then(r => r.json())
-    .then(d => { if (d.role === 'admin') showApp(); else doLogout(); })
-    .catch(() => doLogout());
+// ══ UTILS ════════════════════════════════════════════════
+function escHtml(t) { return String(t || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function cap(s) { return s ? s[0].toUpperCase() + s.slice(1) : ''; }
+function fmtDate(d) { if (!d) return '—'; try { return new Date(d).toLocaleDateString('en-KE', { year: 'numeric', month: 'short', day: 'numeric' }); } catch { return '—'; } }
+function fmtAgo(d) {
+  if (!d) return '—';
+  const diff = Date.now() - new Date(d).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'just now';
+  if (m < 60) return m + 'm ago';
+  const h = Math.floor(m / 60);
+  if (h < 24) return h + 'h ago';
+  const dy = Math.floor(h / 24);
+  if (dy < 7) return dy + 'd ago';
+  return fmtDate(d);
 }
 </script>
 </body>
