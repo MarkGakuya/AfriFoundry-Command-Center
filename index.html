@@ -237,7 +237,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--bo
       <input type="password" id="lpass" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()">
       <label>Backend URL</label>
       <input type="text" id="lurl" placeholder="https://afrifoundry-api.onrender.com" value="https://afrifoundry-api.onrender.com">
-      <button class="lbtn" onclick="doLogin()">Access Command Center</button>
+      <button class="lbtn" id="lbtn" onclick="doLogin()">Access Command Center</button>
       <div class="lerr" id="lerr">Incorrect password. Try again.</div>
     </div>
   </div>
@@ -572,17 +572,24 @@ let allUsers = [], allConvs = [], allDP = [], allGold = [], allRatings = [];
 let selConvId = null, selGoldId = null;
 
 // ══ AUTH ═════════════════════════════════════════════════
+function showErr(msg){ const e=document.getElementById('lerr'); e.textContent=msg; e.style.display='block'; }
 async function doLogin() {
   const email = document.getElementById('lemail').value.trim();
   const pass = document.getElementById('lpass').value;
   const url = document.getElementById('lurl').value.trim();
   if (url) { API = url; localStorage.setItem('cc_url', url); }
-  if (!email || !pass) { document.getElementById('lerr').style.display = 'block'; document.getElementById('lerr').textContent = 'Enter email and password.'; return; }
+  if (!email || !pass) { showErr('Enter email and password.'); return; }
+  const btn = document.getElementById('lbtn');
+  btn.textContent = 'Connecting...'; btn.disabled = true;
   try {
-    const res = await fetch(API + '/api/v1/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email, password: pass}) });
+    const res = await fetch(API + '/api/v1/auth/login', {
+      method: 'POST',
+      headers: {'Content-Type':'application/json'},
+      body: JSON.stringify({email, password: pass})
+    });
     const data = await res.json();
-    if (!res.ok || !data.token) { document.getElementById('lerr').style.display = 'block'; document.getElementById('lerr').textContent = data.detail || 'Login failed. Check credentials.'; return; }
-    if (!['admin','superadmin'].includes(data.user?.role)) { document.getElementById('lerr').style.display = 'block'; document.getElementById('lerr').textContent = 'This account does not have admin access.'; return; }
+    if (!res.ok || !data.token) { showErr(data.detail || 'Login failed. Check your email and password.'); btn.textContent='Access Command Center'; btn.disabled=false; return; }
+    if (!['admin','superadmin'].includes(data.user?.role)) { showErr('Account is not an admin. Ask Mark to upgrade your role.'); btn.textContent='Access Command Center'; btn.disabled=false; return; }
     TOKEN = data.token;
   document.getElementById('login').style.display = 'none';
   document.getElementById('app').classList.add('on');
