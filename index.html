@@ -233,7 +233,8 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--bo
     <div class="login-sub">COMMAND CENTER — RESTRICTED ACCESS</div>
     <div class="lf">
       <label>Password</label>
-      <input type="password" id="lpass" placeholder="Enter admin password" onkeydown="if(event.key==='Enter')doLogin()">
+      <input type="email" id="lemail" placeholder="Admin email" style="margin-bottom:10px" onkeydown="if(event.key==='Enter')doLogin()">
+      <input type="password" id="lpass" placeholder="Admin password" onkeydown="if(event.key==='Enter')doLogin()">
       <label>Backend URL</label>
       <input type="text" id="lurl" placeholder="https://afrifoundry-api.onrender.com" value="https://afrifoundry-api.onrender.com">
       <button class="lbtn" onclick="doLogin()">Access Command Center</button>
@@ -567,17 +568,22 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:var(--bo
 // ══ CONFIG ═══════════════════════════════════════════════
 let API = localStorage.getItem('cc_url') || 'https://afrifoundry-api.onrender.com';
 let TOKEN = '';
-const ADMIN_PASS = 'AfriFoundry2026!';
 let allUsers = [], allConvs = [], allDP = [], allGold = [], allRatings = [];
 let selConvId = null, selGoldId = null;
 
 // ══ AUTH ═════════════════════════════════════════════════
-function doLogin() {
+async function doLogin() {
+  const email = document.getElementById('lemail').value.trim();
   const pass = document.getElementById('lpass').value;
   const url = document.getElementById('lurl').value.trim();
   if (url) { API = url; localStorage.setItem('cc_url', url); }
-  if (pass !== ADMIN_PASS) { document.getElementById('lerr').style.display = 'block'; return; }
-  TOKEN = btoa(pass);
+  if (!email || !pass) { document.getElementById('lerr').style.display = 'block'; document.getElementById('lerr').textContent = 'Enter email and password.'; return; }
+  try {
+    const res = await fetch(API + '/api/v1/auth/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({email, password: pass}) });
+    const data = await res.json();
+    if (!res.ok || !data.token) { document.getElementById('lerr').style.display = 'block'; document.getElementById('lerr').textContent = data.detail || 'Login failed. Check credentials.'; return; }
+    if (!['admin','superadmin'].includes(data.user?.role)) { document.getElementById('lerr').style.display = 'block'; document.getElementById('lerr').textContent = 'This account does not have admin access.'; return; }
+    TOKEN = data.token;
   document.getElementById('login').style.display = 'none';
   document.getElementById('app').classList.add('on');
   bootApp();
@@ -591,7 +597,7 @@ document.getElementById('lpass').addEventListener('keydown', e => { if (e.key ==
 
 // ══ API CALLS ════════════════════════════════════════════
 async function api(path, opts = {}) {
-  const headers = { 'Content-Type': 'application/json', 'X-Admin-Token': TOKEN, ...opts.headers };
+  const headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + TOKEN, ...opts.headers };
   try {
     const res = await fetch(API + path, { ...opts, headers });
     if (!res.ok) throw new Error(`${res.status}`);
